@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum RecommendationStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  likes           Like[]
+  recommendations Recommendation[]
+
+  @@map("users")
+}
+
+model Like {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  tmdbMovieId Int      @map("tmdb_movie_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, tmdbMovieId])
+  @@map("likes")
+}
+
+model Recommendation {
+  id          Int                  @id @default(autoincrement())
+  userId      Int                  @map("user_id")
+  tmdbMovieId Int?                 @map("tmdb_movie_id")
+  reason      String?
+  status      RecommendationStatus @default(PENDING)
+  createdAt   DateTime             @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("recommendations")
+}
