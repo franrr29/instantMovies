@@ -3,14 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "dev": "tsx watch src/app.ts",
-    "dev:worker": "tsx watch src/worker.ts",
-    "build": "tsc",
-    "start": "node dist/app.js",
-    "start:worker": "node dist/worker.js",
-    "postinstall": "prisma skills sync || exit 0"
-  },
+ "scripts": {
+  "dev": "tsx watch src/index.ts",
+  "dev:worker": "tsx watch src/worker.ts",
+  "build": "tsc",
+  "start": "node dist/index.js",
+  "start:worker": "node dist/worker.js"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",

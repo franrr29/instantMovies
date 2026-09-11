@@ -37,6 +37,7 @@ export async function login(req: Request, res: Response, next: NextFunction) {
 
     const { username, password } = loginSchema.parse(req.body);
     const { token } = await loginUser(username, password);
+    
     res.status(200).json({ token });
 
   } catch (err) {
