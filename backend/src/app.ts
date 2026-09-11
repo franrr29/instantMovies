@@ -4,6 +4,7 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { authRouter } from './modules/auth/auth.routes';
+import { likesRouter } from './modules/likes/likes.routes';
 import { moviesRouter } from './modules/movies/movies.routes';
 import { errorHandler } from './shared/errorHandler';
 
@@ -26,5 +27,6 @@ app.use(rateLimiter);
 
 app.use('/auth', authRouter);
 app.use('/movies', moviesRouter);
+app.use('/likes', likesRouter);
 
 app.use(errorHandler);
