@@ -46,10 +46,11 @@ export async function generateRecommendation(
   const prompt = buildPrompt(likedMovies);
 
   const completion = await groq.chat.completions.create({
-    model: 'llama-3.1-8b-instant',
-    messages: [{ role: 'user', content: prompt }],
-    response_format: { type: 'json_object' },
-  });
+  model: 'qwen/qwen3.8-27b',
+  messages: [{ role: 'user', content: prompt }],
+  response_format: { type: 'json_object' },
+  max_tokens: 200,
+});
 
   const rawContent = completion.choices[0]?.message?.content ?? '';
 

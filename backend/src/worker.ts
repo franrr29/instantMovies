@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { Worker, type Job } from 'bullmq';
 import { getLikesByUser } from './modules/likes/likes.repository';
 import {
