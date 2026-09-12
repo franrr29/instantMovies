@@ -95,7 +95,20 @@ async function processRecommendationJob(job: Job<RecommendationJobData>): Promis
 
     logger.info({ recommendationId, tmdbMovieId: result.tmdbMovieId }, 'recomendacion completada');
   } catch (err) {
-    logger.error({ err, recommendationId, userId }, 'fallo el procesamiento de la recomendacion, se marca como failed');
+    const maxAttempts = job.opts.attempts ?? 1;
+
+    if (job.attemptsMade < maxAttempts - 1) {
+      logger.warn(
+        { err, recommendationId, userId, attemptsMade: job.attemptsMade },
+        'fallo el procesamiento de la recomendacion, se reintentara',
+      );
+      throw err;
+    }
+
+    logger.error(
+      { err, recommendationId, userId, attemptsMade: job.attemptsMade },
+      'fallo el procesamiento de la recomendacion, se agotaron los reintentos, se marca como failed',
+    );
     await failRecommendation(recommendationId);
   }
 }

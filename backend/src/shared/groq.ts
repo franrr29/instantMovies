@@ -19,7 +19,7 @@ function getGroqApiKey(): string {
   return apiKey;
 }
 
-const groq = new Groq({ apiKey: getGroqApiKey() });
+export const groq = new Groq({ apiKey: getGroqApiKey() });
 
 function buildPrompt(likedMovies: { id: number; title: string; genres: string[] }[]): string {
   const likedList = likedMovies
