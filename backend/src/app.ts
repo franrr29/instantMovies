@@ -4,6 +4,7 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { authRouter } from './modules/auth/auth.routes';
+import { chatRouter } from './modules/chat/chat.routes';
 import { likesRouter } from './modules/likes/likes.routes';
 import { moviesRouter } from './modules/movies/movies.routes';
 import { recommendationsRouter } from './modules/recommendations/recommendations.routes';
@@ -27,6 +28,7 @@ app.use(express.json());
 app.use(rateLimiter);
 
 app.use('/auth', authRouter);
+app.use('/chat', chatRouter);
 app.use('/movies', moviesRouter);
 app.use('/likes', likesRouter);
 app.use('/recommendations', recommendationsRouter);
