@@ -10,7 +10,7 @@ import { getRecommendationsByUser } from '../recommendations/recommendations.rep
 import { getMessagesByUser, saveMessage } from './chat.repository';
 
 const CHAT_MODEL = 'qwen/qwen3.8-27b';
-const CHAT_TIMEOUT_MS = 15000;
+const CHAT_TIMEOUT_MS = 30000;
 const MAX_TOOL_CALLS = 3;
 const BLOCKED_REPLY = 'Solo puedo ayudarte con peliculas y entretenimiento.';
 
@@ -78,19 +78,21 @@ async function buildSystemPrompt(userId: number): Promise<string> {
     '',
     previousRecommendationsLine,
     '',
-    'Cuando recomiendes una pelicula concreta, usa siempre la herramienta search_movie para obtener sus datos reales antes de mencionarla.',
+    'Reglas de formato: respondé en 2-3 oraciones máximo por película. No repitas rating, sinopsis ni datos técnicos porque la interfaz ya los muestra. No uses headers markdown (##), listas con asteriscos, ni emojis. Solo texto plano conversacional.',
+    'OBLIGATORIO: nunca menciones una película sin antes buscarla con search_movie. Si no la buscaste, no la nombres. No inventes títulos, ratings ni sinopsis. Si no encontrás resultados, decile al usuario que no encontraste nada.',
   ].join('\n');
 }
 
 async function callGroqChat(
   messages: Groq.Chat.ChatCompletionMessageParam[],
+  tools?: Groq.Chat.ChatCompletionTool[],
 ): Promise<Groq.Chat.ChatCompletion> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), CHAT_TIMEOUT_MS);
 
   try {
     return await groq.chat.completions.create(
-      { model: CHAT_MODEL, messages, tools: [searchMovieTool], max_tokens: 400 },
+      { model: CHAT_MODEL, messages, tools, max_tokens: 400 },
       { signal: controller.signal },
     );
   } finally {
@@ -106,12 +108,20 @@ async function runToolCallingLoop(
   let toolCallsUsed = 0;
 
   while (true) {
-    const completion = await callGroqChat(messages);
+    const completion = await callGroqChat(messages, [searchMovieTool]);
     const responseMessage = completion.choices[0]?.message;
     const toolCall = responseMessage?.tool_calls?.[0];
 
     if (!toolCall || toolCallsUsed >= MAX_TOOL_CALLS) {
-      return responseMessage?.content ?? '';
+      const content = responseMessage?.content;
+
+      // groq a veces devuelve el resultado del tool sin texto; le pedimos que lo redacte, ya sin tools
+      if (!content && movies.length > 0) {
+        const finalCompletion = await callGroqChat(messages);
+        return finalCompletion.choices[0]?.message?.content ?? '';
+      }
+
+      return content ?? '';
     }
 
     toolCallsUsed += 1;
