@@ -1,12 +1,10 @@
-import 'dotenv/config';
 import { Worker, type Job } from 'bullmq';
+import Groq from 'groq-sdk';
+import { z } from 'zod';
 import { getLikesByUser } from './modules/likes/likes.repository';
-import {
-  completeRecommendation,
-  failRecommendation,
+import {completeRecommendation,failRecommendation,
 } from './modules/recommendations/recommendations.repository';
 import { redisConnection } from './queue/recommendationQueue';
-import { generateRecommendation } from './shared/groq';
 import { logger } from './shared/logger';
 import { getMovieById } from './shared/tmdb';
 
@@ -14,6 +12,47 @@ interface RecommendationJobData {
   recommendationId: number;
   userId: number;
 }
+
+const groqRecommendationSchema = z.object({
+  title: z.string(),
+  tmdbMovieId: z.number(),
+  reason: z.string(),
+});
+
+function getGroqApiKey(): string {
+  const apiKey = process.env.GROQ_API_KEY;
+
+  if (!apiKey) {
+    throw new Error('falta configurar la variable de entorno GROQ_API_KEY');
+  }
+
+  return apiKey;
+}
+
+const groq = new Groq({ apiKey: getGroqApiKey() });
+
+function buildPrompt(likedMovies: { id: number; title: string; genres: string[] }[]): string {
+  const likedList = likedMovies
+    .map((movie) => `- (tmdbMovieId: ${movie.id}) ${movie.title} — generos: ${movie.genres.join(', ') || 'sin genero'}`)
+    .join('\n');
+
+  const likedIds = likedMovies.map((movie) => movie.id).join(', ');
+
+  return [
+    'Sos un sistema de recomendacion de peliculas.',
+    'El usuario marco como "me gusta" estas peliculas:',
+    likedList,
+    '',
+    `No recomiendes ninguna pelicula cuyo tmdbMovieId este en esta lista: ${likedIds}.`,
+    'Recomenda UNA sola pelicula distinta que el usuario probablemente disfrute, dado ese gusto.',
+    'Respondé unicamente con un JSON valido, sin texto adicional ni markdown, con esta forma exacta:',
+    '{ "title": "...", "tmdbMovieId": number, "reason": "..." }',
+  ].join('\n');
+}
+
+
+
+
 
 async function processRecommendationJob(job: Job<RecommendationJobData>): Promise<void> {
   const { recommendationId, userId } = job.data;
@@ -36,11 +75,21 @@ async function processRecommendationJob(job: Job<RecommendationJobData>): Promis
       }),
     );
 
+    const prompt = buildPrompt(likedMovies);
+
     logger.info({ recommendationId }, 'llamando a groq');
 
-    const result = await generateRecommendation(likedMovies);
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant',
+      messages: [{ role: 'user', content: prompt }],
+      response_format: { type: 'json_object' },
+    });
 
-    logger.info({ recommendationId, result }, 'respuesta de groq validada');
+    const rawContent = completion.choices[0]?.message?.content ?? '';
+
+    logger.info({ recommendationId, rawContent }, 'respuesta de groq recibida');
+
+    const result = groqRecommendationSchema.parse(JSON.parse(rawContent));
 
     await completeRecommendation(recommendationId, result.tmdbMovieId, result.reason);
 

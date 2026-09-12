@@ -42,10 +42,17 @@ export async function requestRecommendation(userId: number): Promise<Recommendat
 
   const recommendation = await createRecommendation(userId);
 
-  await recommendationQueue.add('generate-recommendation', {
-    recommendationId: recommendation.id,
-    userId,
-  });
+  await recommendationQueue.add(
+    'generate-recommendation',
+    {
+      recommendationId: recommendation.id,
+      userId,
+    },
+    {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 5000 },
+    },
+  );
 
   return recommendation;
 }

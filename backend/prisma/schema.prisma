@@ -20,6 +20,11 @@ enum RecommendationStatus {
   FAILED
 }
 
+enum ChatMessageRole {
+  USER
+  ASSISTANT
+}
+
 model User {
   id           Int      @id @default(autoincrement())
   username     String   @unique
@@ -28,6 +33,7 @@ model User {
 
   likes           Like[]
   recommendations Recommendation[]
+  chatMessages    ChatMessage[]
 
   @@map("users")
 }
@@ -55,4 +61,17 @@ model Recommendation {
   user User @relation(fields: [userId], references: [id])
 
   @@map("recommendations")
+}
+
+model ChatMessage {
+  id        Int             @id @default(autoincrement())
+  userId    Int             @map("user_id")
+  role      ChatMessageRole
+  content   String          @db.Text
+  createdAt DateTime        @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@map("chat_messages")
 }
