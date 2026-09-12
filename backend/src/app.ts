@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import { authRouter } from './modules/auth/auth.routes';
 import { likesRouter } from './modules/likes/likes.routes';
 import { moviesRouter } from './modules/movies/movies.routes';
+import { recommendationsRouter } from './modules/recommendations/recommendations.routes';
 import { errorHandler } from './shared/errorHandler';
 
 const rateLimiter = rateLimit({
@@ -28,5 +29,6 @@ app.use(rateLimiter);
 app.use('/auth', authRouter);
 app.use('/movies', moviesRouter);
 app.use('/likes', likesRouter);
+app.use('/recommendations', recommendationsRouter);
 
 app.use(errorHandler);

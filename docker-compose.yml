@@ -1,0 +1,6 @@
+# Redis se necesita en el puerto 6379 para la cola de BullMQ
+# (backend/src/queue/recommendationQueue.ts, consumida por backend/src/worker.ts).
+#
+# Todavia no esta orquestado aca: por ahora se levanta manualmente en desarrollo.
+# El service y el worker se conectan via la variable de entorno REDIS_URL,
+# con fallback a redis://localhost:6379 si no esta definida.
