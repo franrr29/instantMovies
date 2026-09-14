@@ -1,3 +1,4 @@
+import type { AxiosRequestConfig } from 'axios';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AUTH_LOGOUT_EVENT, api } from '../services/api';
@@ -23,8 +24,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
 
+    // _skipAuthLogout: un 401 aca es normal (no hay sesion todavia) y no
+    // debe disparar auth:logout ni redirigir a /login
     api
-      .get<{ user: User }>('/auth/me')
+      .get<{ user: User }>('/auth/me', { _skipAuthLogout: true } as AxiosRequestConfig)
       .then((response) => {
         if (!cancelled) setUser(response.data.user);
       })
