@@ -7,7 +7,7 @@ export const chatRouter = Router();
 
 chatRouter.use(authenticate);
 
-// 10 requests/min por usuario, va despues de authenticate porque necesita req.user
+// 10 requests/min por usuario, va despues de authenticate porque necesita req.user, sino req.user no estaria disponible
 const chatRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 10,

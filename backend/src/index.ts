@@ -11,11 +11,18 @@ const server = app.listen(env.PORT, () => {
 async function shutdown(signal: string) {
   logger.info({ signal }, 'señal recibida, iniciando apagado prolijo');
 
-  server.close(() => {
-    logger.info('servidor http cerrado');
-  });
-
   try {
+    await new Promise<void>((resolve, reject) => {
+      server.close((err) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve();
+      });
+    });
+    logger.info('servidor http cerrado');
+
     await recommendationQueue.close();
     logger.info('cola de recomendaciones cerrada');
 
@@ -33,6 +40,8 @@ async function shutdown(signal: string) {
   }
 }
 
+
+//escucha el proceso y comienza a ejecutar el shutdown:
 process.on('SIGTERM', () => {
   shutdown('SIGTERM');
 });
