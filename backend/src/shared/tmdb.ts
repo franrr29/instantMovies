@@ -71,6 +71,32 @@ export async function getTrendingMovies(page = 1): Promise<TmdbMovie[]> {
   return fetchFromTmdb('/trending/movie/week', { page: String(page) });
 }
 
+export interface DiscoverMoviesFilters {
+  genreIds?: number[];
+  primaryReleaseYear?: number;
+  minRating?: number;
+}
+
+// busqueda por filtros (genero, año, rating minimo) en vez de por titulo,
+// usada por la tool discover_movies del chat
+export async function discoverMovies(filters: DiscoverMoviesFilters): Promise<TmdbMovie[]> {
+  const params: Record<string, string> = {};
+
+  if (filters.genreIds && filters.genreIds.length > 0) {
+    params.with_genres = filters.genreIds.join(',');
+  }
+
+  if (filters.primaryReleaseYear) {
+    params.primary_release_year = String(filters.primaryReleaseYear);
+  }
+
+  if (filters.minRating !== undefined) {
+    params['vote_average.gte'] = String(filters.minRating);
+  }
+
+  return fetchFromTmdb('/discover/movie', params);
+}
+
 export async function getMovieById(tmdbMovieId: number): Promise<TmdbMovieDetails> {
   const url = new URL(`${TMDB_BASE_URL}/movie/${tmdbMovieId}`);
   url.searchParams.set('api_key', getApiKey());

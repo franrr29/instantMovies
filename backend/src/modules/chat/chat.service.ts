@@ -4,7 +4,7 @@ import { groq } from '../../shared/groq';
 import { checkMessageSafety } from '../../shared/guard';
 import { logger } from '../../shared/logger';
 import { sanitizeMessage } from '../../shared/sanitize';
-import { getMovieById, searchMovies } from '../../shared/tmdb';
+import { discoverMovies, getMovieById, searchMovies } from '../../shared/tmdb';
 import { getLikesByUser } from '../likes/likes.repository';
 import { getRecommendationsByUser } from '../recommendations/recommendations.repository';
 import { getMessagesByUser, saveMessage } from './chat.repository';
@@ -29,13 +29,41 @@ const searchMovieTool: Groq.Chat.ChatCompletionTool = {
   function: {
     name: 'search_movie',
     description:
-      'Busca una pelicula en TMDB por titulo para obtener datos reales (id, poster, rating, overview). Usá esta herramienta siempre que recomiendes una pelicula.',
+      'Busca una pelicula puntual en TMDB por titulo para obtener datos reales (id, poster, rating, overview). Usala cuando el usuario menciona un titulo especifico (ej: "buscame Inception").',
     parameters: {
       type: 'object',
       properties: {
         title: { type: 'string' },
       },
       required: ['title'],
+    },
+  },
+};
+
+//tool que busca peliculas en TMDB por filtros (genero, año, rating), en vez de por titulo:
+const discoverMovieTool: Groq.Chat.ChatCompletionTool = {
+  type: 'function',
+  function: {
+    name: 'discover_movies',
+    description:
+      'Busca peliculas en TMDB por filtros cuando el usuario describe un tipo de pelicula en vez de nombrar un titulo (ej: "quiero un thriller del 2020", "una comedia bien valorada"). No la uses si el usuario menciona un titulo puntual: para eso esta search_movie.',
+    parameters: {
+      type: 'object',
+      properties: {
+        with_genres: {
+          type: 'array',
+          items: { type: 'number' },
+          description: 'IDs de genero de TMDB (ej: 28 accion, 35 comedia, 27 terror, 18 drama, 53 thriller).',
+        },
+        primary_release_year: {
+          type: 'number',
+          description: 'Año de estreno exacto de las peliculas buscadas.',
+        },
+        'vote_average.gte': {
+          type: 'number',
+          description: 'Rating minimo (escala de 0 a 10).',
+        },
+      },
     },
   },
 };
@@ -79,7 +107,7 @@ async function buildSystemPrompt(userId: number): Promise<string> {
     previousRecommendationsLine,
     '',
     'Reglas de formato: respondé en 2-3 oraciones máximo por película. No repitas rating, sinopsis ni datos técnicos porque la interfaz ya los muestra. No uses headers markdown (##), listas con asteriscos, ni emojis. Solo texto plano conversacional.',
-    'OBLIGATORIO: nunca menciones una película sin antes buscarla con search_movie. Si no la buscaste, no la nombres. No inventes títulos, ratings ni sinopsis. Si no encontrás resultados, decile al usuario que no encontraste nada.',
+    'OBLIGATORIO: nunca menciones una película sin antes buscarla con search_movie o discover_movies. Si no la buscaste, no la nombres. No inventes títulos, ratings ni sinopsis. Si no encontrás resultados, decile al usuario que no encontraste nada.',
   ].join('\n');
 }
 
@@ -100,6 +128,70 @@ async function callGroqChat(
   }
 }
 
+// ejecuta la tool que haya elegido el modelo (search_movie o discover_movies) y
+// devuelve el content que se le manda de vuelta como resultado de la tool call
+async function executeTool(
+  toolCall: Groq.Chat.ChatCompletionMessageToolCall,
+  movies: ChatMovieResult[],
+): Promise<string> {
+  let toolArgs: Record<string, unknown> | null;
+
+  try {
+    toolArgs = JSON.parse(toolCall.function.arguments) as Record<string, unknown>;
+  } catch {
+    toolArgs = null;
+  }
+
+  if (!toolArgs) {
+    return JSON.stringify({ error: 'argumentos invalidos' });
+  }
+
+  if (toolCall.function.name === 'discover_movies') {
+    const found = await discoverMovies({
+      genreIds: Array.isArray(toolArgs.with_genres)
+        ? (toolArgs.with_genres as number[])
+        : undefined,
+      primaryReleaseYear:
+        typeof toolArgs.primary_release_year === 'number' ? toolArgs.primary_release_year : undefined,
+      minRating:
+        typeof toolArgs['vote_average.gte'] === 'number' ? (toolArgs['vote_average.gte'] as number) : undefined,
+    });
+
+    const results = found.slice(0, 5);
+
+    movies.push(
+      ...results.map((movie) => ({
+        tmdbId: movie.id,
+        title: movie.title,
+        posterPath: movie.poster_path,
+        rating: movie.vote_average,
+        overview: movie.overview,
+      })),
+    );
+
+    return JSON.stringify(results.length > 0 ? results : { error: 'no se encontraron resultados en tmdb' });
+  }
+
+  // default: search_movie
+  if (typeof toolArgs.title !== 'string') {
+    return JSON.stringify({ error: 'argumentos invalidos' });
+  }
+
+  const [found] = await searchMovies(toolArgs.title);
+
+  if (found) {
+    movies.push({
+      tmdbId: found.id,
+      title: found.title,
+      posterPath: found.poster_path,
+      rating: found.vote_average,
+      overview: found.overview,
+    });
+  }
+
+  return JSON.stringify(found ?? { error: 'no se encontraron resultados en tmdb' });
+}
+
 // cada vuelta es un round-trip a groq; corta sin tool_calls o al llegar al limite de reintentos de herramienta
 async function runToolCallingLoop(
   messages: Groq.Chat.ChatCompletionMessageParam[],
@@ -108,7 +200,7 @@ async function runToolCallingLoop(
   let toolCallsUsed = 0;
 
   while (true) {
-    const completion = await callGroqChat(messages, [searchMovieTool]);
+    const completion = await callGroqChat(messages, [searchMovieTool, discoverMovieTool]);
     const responseMessage = completion.choices[0]?.message;
     const toolCall = responseMessage?.tool_calls?.[0];
 
@@ -132,39 +224,12 @@ async function runToolCallingLoop(
       tool_calls: [toolCall],
     });
 
-    let toolArgs: { title: string } | null;
-
-    try {
-      toolArgs = JSON.parse(toolCall.function.arguments) as { title: string };
-    } catch {
-      toolArgs = null;
-    }
-
-    if (!toolArgs) {
-      messages.push({
-        role: 'tool',
-        tool_call_id: toolCall.id,
-        content: JSON.stringify({ error: 'argumentos invalidos' }),
-      });
-      continue;
-    }
-
-    const [found] = await searchMovies(toolArgs.title);
-
-    if (found) {
-      movies.push({
-        tmdbId: found.id,
-        title: found.title,
-        posterPath: found.poster_path,
-        rating: found.vote_average,
-        overview: found.overview,
-      });
-    }
+    const toolResultContent = await executeTool(toolCall, movies);
 
     messages.push({
       role: 'tool',
       tool_call_id: toolCall.id,
-      content: JSON.stringify(found ?? { error: 'no se encontraron resultados en tmdb' }),
+      content: toolResultContent,
     });
   }
 }
