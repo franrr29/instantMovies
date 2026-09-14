@@ -1,4 +1,5 @@
 import { env } from './shared/env';
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
@@ -27,8 +28,9 @@ app.use(requestIdMiddleware);
 app.get('/health', healthCheck);
 
 app.use(helmet());
-app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
 app.use(express.json());
+app.use(cookieParser());
 app.use(rateLimiter);
 
 const apiRouter = express.Router();

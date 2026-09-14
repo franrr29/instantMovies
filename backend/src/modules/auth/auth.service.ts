@@ -23,18 +23,19 @@ export class AuthServiceError extends Error {
   }
 }
 
-export interface RegisteredUser {
+export interface PublicUser {
   id: number;
   username: string;
   createdAt: Date;
 }
 
-export interface LoginResult {
+export interface AuthResult {
+  user: PublicUser;
   token: string;
 }
 
 
-export async function registerUser(username: string, password: string): Promise<RegisteredUser> {
+export async function registerUser(username: string, password: string): Promise<AuthResult> {
 
   const existingUser = await findUserByUsername(username);
 
@@ -44,12 +45,13 @@ export async function registerUser(username: string, password: string): Promise<
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
   const user = await createUser({ username, passwordHash });
+  const token = signToken(user.id, user.username);
 
-  return { id: user.id, username: user.username, createdAt: user.createdAt };
+  return { user: { id: user.id, username: user.username, createdAt: user.createdAt }, token };
 }
 
-export async function loginUser(username: string, password: string): Promise<LoginResult> {
-  
+export async function loginUser(username: string, password: string): Promise<AuthResult> {
+
   const user = await findUserByUsername(username);
 
   // se compara siempre, exista o no el usuario, para no filtrar por tiempo de respuesta si el username existe
@@ -61,7 +63,7 @@ export async function loginUser(username: string, password: string): Promise<Log
   }
 
   const token = signToken(user.id, user.username);
-  return { token };
+  return { user: { id: user.id, username: user.username, createdAt: user.createdAt }, token };
 }
 
 function signToken(userId: number, username: string): string {

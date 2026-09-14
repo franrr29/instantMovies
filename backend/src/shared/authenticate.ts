@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import { AUTH_COOKIE_NAME } from './authCookie';
 import { env } from './env';
 import type { HttpError } from './errorHandler';
 
@@ -23,14 +24,12 @@ function unauthorized(message: string): HttpError {
 }
 
 export function authenticate(req: Request, res: Response, next: NextFunction) {
-  const authHeader = req.headers.authorization;
+  const token = req.cookies?.[AUTH_COOKIE_NAME];
 
-  if (!authHeader?.startsWith('Bearer ')) {
+  if (!token) {
     next(unauthorized('token no provisto'));
     return;
   }
-
-  const token = authHeader.slice('Bearer '.length);
 
   try {
     const payload = jwt.verify(token, env.JWT_SECRET) as jwt.JwtPayload;
