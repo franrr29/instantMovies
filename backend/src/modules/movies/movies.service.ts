@@ -1,4 +1,4 @@
-import { getPopularMovies, searchMovies, type TmdbMovie } from '../../shared/tmdb';
+import { getPopularMovies, getTrendingMovies, searchMovies, type TmdbMovie } from '../../shared/tmdb';
 
 export async function listMovies(query?: string, page?: number): Promise<TmdbMovie[]> {
   if (query) {
@@ -6,4 +6,8 @@ export async function listMovies(query?: string, page?: number): Promise<TmdbMov
   }
 
   return getPopularMovies(page);
+}
+
+export async function listTrendingMovies(page?: number): Promise<TmdbMovie[]> {
+  return getTrendingMovies(page);
 }

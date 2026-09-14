@@ -65,6 +65,12 @@ export async function searchMovies(query: string, page = 1): Promise<TmdbMovie[]
   return fetchFromTmdb('/search/movie', { query, page: String(page) });
 }
 
+// peliculas en tendencia de la semana; es el catalogo inicial cuando el usuario
+// todavia no escribio ninguna busqueda
+export async function getTrendingMovies(page = 1): Promise<TmdbMovie[]> {
+  return fetchFromTmdb('/trending/movie/week', { page: String(page) });
+}
+
 export async function getMovieById(tmdbMovieId: number): Promise<TmdbMovieDetails> {
   const url = new URL(`${TMDB_BASE_URL}/movie/${tmdbMovieId}`);
   url.searchParams.set('api_key', getApiKey());

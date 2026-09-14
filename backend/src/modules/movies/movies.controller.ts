@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import { listMovies } from './movies.service';
+import { listMovies, listTrendingMovies } from './movies.service';
 
 export async function getMovies(req: Request, res: Response, next: NextFunction) {
   try {
@@ -7,6 +7,17 @@ export async function getMovies(req: Request, res: Response, next: NextFunction)
     const page = req.query.page ? Number(req.query.page) : undefined;
 
     const movies = await listMovies(query, page);
+    res.status(200).json(movies);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getTrendingMovies(req: Request, res: Response, next: NextFunction) {
+  try {
+    const page = req.query.page ? Number(req.query.page) : undefined;
+
+    const movies = await listTrendingMovies(page);
     res.status(200).json(movies);
   } catch (err) {
     next(err);
