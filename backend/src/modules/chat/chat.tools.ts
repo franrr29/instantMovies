@@ -95,6 +95,7 @@ export async function executeTool(
       })),
     );
 
+    //para que el llm use como resultado en su respuesta al usuario
     return JSON.stringify(results.length > 0 ? results : { error: 'no se encontraron resultados en tmdb' });
   }
 
