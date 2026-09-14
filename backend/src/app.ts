@@ -31,10 +31,14 @@ app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(express.json());
 app.use(rateLimiter);
 
-app.use('/auth', authRouter);
-app.use('/chat', chatRouter);
-app.use('/movies', moviesRouter);
-app.use('/likes', likesRouter);
-app.use('/recommendations', recommendationsRouter);
+const apiRouter = express.Router();
+
+apiRouter.use('/auth', authRouter);
+apiRouter.use('/chat', chatRouter);
+apiRouter.use('/movies', moviesRouter);
+apiRouter.use('/likes', likesRouter);
+apiRouter.use('/recommendations', recommendationsRouter);
+
+app.use('/api/v1', apiRouter);
 
 app.use(errorHandler);
