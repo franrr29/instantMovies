@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import { env } from './env';
 import type { HttpError } from './errorHandler';
 
 export interface AuthenticatedUser {
@@ -29,16 +30,10 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
     return;
   }
 
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    next(new Error('falta configurar la variable de entorno JWT_SECRET'));
-    return;
-  }
-
   const token = authHeader.slice('Bearer '.length);
 
   try {
-    const payload = jwt.verify(token, secret) as jwt.JwtPayload;
+    const payload = jwt.verify(token, env.JWT_SECRET) as jwt.JwtPayload;
     req.user = { id: Number(payload.sub), username: payload.username };
     next();
   } catch {

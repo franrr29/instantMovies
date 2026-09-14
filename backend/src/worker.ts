@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import './shared/env';
 import { Worker, type Job } from 'bullmq';
 import { getLikesByUser } from './modules/likes/likes.repository';
 import {
@@ -6,6 +6,7 @@ import {
   failRecommendation,
 } from './modules/recommendations/recommendations.repository';
 import { redisConnection } from './queue/recommendationQueue';
+import { prisma } from './shared/db';
 import { generateRecommendation } from './shared/groq';
 import { logger } from './shared/logger';
 import { getMovieById } from './shared/tmdb';
@@ -75,3 +76,29 @@ export const recommendationWorker = new Worker<RecommendationJobData>(
 );
 
 logger.info('worker de recomendaciones arrancado');
+
+async function shutdown(signal: string) {
+  logger.info({ signal }, 'señal recibida, iniciando apagado prolijo del worker');
+
+  try {
+    // espera a que terminen los jobs en curso antes de cerrar la conexion
+    await recommendationWorker.close();
+    logger.info('worker de recomendaciones cerrado');
+
+    await redisConnection.quit();
+    logger.info('conexion a redis cerrada');
+
+    await prisma.$disconnect();
+    logger.info('conexion a prisma cerrada');
+
+    logger.info('apagado prolijo del worker completo');
+    process.exit(0);
+  } catch (err) {
+    logger.error({ err }, 'error durante el apagado prolijo del worker');
+    process.exit(1);
+  }
+}
+
+process.on('SIGTERM', () => {
+  shutdown('SIGTERM');
+});

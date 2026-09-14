@@ -1,5 +1,6 @@
 import Groq from 'groq-sdk';
 import { z } from 'zod';
+import { env } from './env';
 
 export const groqRecommendationSchema = z.object({
   title: z.string(),
@@ -9,17 +10,7 @@ export const groqRecommendationSchema = z.object({
 
 export type GroqRecommendation = z.infer<typeof groqRecommendationSchema>;
 
-function getGroqApiKey(): string {
-  const apiKey = process.env.GROQ_API_KEY;
-
-  if (!apiKey) {
-    throw new Error('falta configurar la variable de entorno GROQ_API_KEY');
-  }
-
-  return apiKey;
-}
-
-export const groq = new Groq({ apiKey: getGroqApiKey() });
+export const groq = new Groq({ apiKey: env.GROQ_API_KEY });
 
 function buildPrompt(likedMovies: { id: number; title: string; genres: string[] }[]): string {
   const likedList = likedMovies

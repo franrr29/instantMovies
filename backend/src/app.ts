@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import { env } from './shared/env';
 import cors from 'cors';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
@@ -9,6 +9,8 @@ import { likesRouter } from './modules/likes/likes.routes';
 import { moviesRouter } from './modules/movies/movies.routes';
 import { recommendationsRouter } from './modules/recommendations/recommendations.routes';
 import { errorHandler } from './shared/errorHandler';
+import { healthCheck } from './shared/health';
+import { requestIdMiddleware } from './shared/requestId';
 
 const rateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -17,13 +19,15 @@ const rateLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// sin CORS_ORIGIN definida (todavia no hay .env) cae al puerto default de vite
-const corsOrigin = process.env.CORS_ORIGIN ?? 'http://localhost:5173';
-
 export const app = express();
 
+app.use(requestIdMiddleware);
+
+// sin auth, antes de cualquier middleware de autenticacion
+app.get('/health', healthCheck);
+
 app.use(helmet());
-app.use(cors({ origin: corsOrigin, credentials: true }));
+app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(express.json());
 app.use(rateLimiter);
 

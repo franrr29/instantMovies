@@ -1,11 +1,10 @@
 import { Queue } from 'bullmq';
 import IORedis from 'ioredis';
-
-const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379';
+import { env } from '../shared/env';
 
 // se comparte con el worker; maxRetriesPerRequest: null es requerido por BullMQ
 // para las conexiones que usa un Worker (comandos bloqueantes)
-export const redisConnection = new IORedis(REDIS_URL, {
+export const redisConnection = new IORedis(env.REDIS_URL, {
   maxRetriesPerRequest: null,
 });
 

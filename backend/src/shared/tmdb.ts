@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { env } from './env';
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
@@ -33,13 +34,7 @@ export type TmdbMovie = z.infer<typeof tmdbMovieSchema>;
 export type TmdbMovieDetails = z.infer<typeof tmdbMovieDetailsSchema>;
 
 function getApiKey(): string {
-  const apiKey = process.env.TMDB_API_KEY;
-
-  if (!apiKey) {
-    throw new Error('falta configurar la variable de entorno TMDB_API_KEY');
-  }
-
-  return apiKey;
+  return env.TMDB_API_KEY;
 }
 
 async function fetchFromTmdb(path: string, params: Record<string, string>): Promise<TmdbMovie[]> {

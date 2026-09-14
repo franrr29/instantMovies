@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { env } from '../../shared/env';
 import { createUser, findUserByUsername } from './auth.repository';
 
 const SALT_ROUNDS = 10;
@@ -64,11 +65,5 @@ export async function loginUser(username: string, password: string): Promise<Log
 }
 
 function signToken(userId: number, username: string): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    // esto es un error de configuracion del entorno, no de negocio, por eso no usa AuthServiceError
-    throw new Error('falta configurar la variable de entorno JWT_SECRET');
-  }
-
-  return jwt.sign({ sub: userId, username }, secret, { expiresIn: JWT_EXPIRES_IN });
+  return jwt.sign({ sub: userId, username }, env.JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 }
