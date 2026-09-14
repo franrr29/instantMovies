@@ -74,6 +74,9 @@ async function runToolCallingLoop(
   }
 }
 
+
+
+
 export async function handleChatMessage(
   userId: number,
   message: string,
