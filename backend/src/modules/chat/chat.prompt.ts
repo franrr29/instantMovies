@@ -22,8 +22,8 @@ export async function buildSystemPrompt(userId: number): Promise<string> {
   const recommendations = await getRecommendationsByUser(userId);
   const previousRecommendationIds = recommendations
     .filter((recommendation) => recommendation.status === RecommendationStatus.COMPLETED)
-    .map((recommendation) => recommendation.tmdbMovieId)
-    .filter((tmdbMovieId): tmdbMovieId is number => tmdbMovieId !== null);
+    .flatMap((recommendation) => recommendation.movies ?? [])
+    .map((movie) => movie.tmdbMovieId);
 
   const previousRecommendationsLine =
     previousRecommendationIds.length > 0

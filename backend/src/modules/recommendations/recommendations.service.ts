@@ -1,10 +1,11 @@
 import { RecommendationStatus } from '../../generated/prisma/client';
 import { recommendationQueue } from '../../queue/recommendationQueue';
 import { getLikesByUser } from '../likes/likes.repository';
-import {createRecommendation,getRecommendationsByUser,type RecommendationRecord,
+import {createRecommendation,getRecommendationByIdForUser,getRecommendationsByUser,type RecommendationRecord,
 } from './recommendations.repository';
+import { getMovieById } from '../../shared/tmdb';
 
-type RecommendationsErrorCode = 'NO_LIKES' | 'PENDING_ALREADY_EXISTS';
+type RecommendationsErrorCode = 'NO_LIKES' | 'PENDING_ALREADY_EXISTS' | 'NOT_FOUND';
 
 // el controller decide el status http a partir de este code, el service no sabe de http
 export class RecommendationsServiceError extends Error {
@@ -15,6 +16,49 @@ export class RecommendationsServiceError extends Error {
     this.name = 'RecommendationsServiceError';
     this.code = code;
   }
+}
+
+export interface EnrichedRecommendedMovie {
+  tmdbMovieId: number;
+  reason: string;
+  title: string;
+  overview: string;
+  posterPath: string | null;
+  voteAverage: number;
+}
+
+export interface EnrichedRecommendation {
+  id: number;
+  userId: number;
+  status: RecommendationStatus;
+  createdAt: Date;
+  movies: EnrichedRecommendedMovie[] | null;
+}
+
+async function enrichRecommendation(recommendation: RecommendationRecord): Promise<EnrichedRecommendation> {
+  const movies = recommendation.movies
+    ? await Promise.all(
+        recommendation.movies.map(async (movie) => {
+          const tmdbMovie = await getMovieById(movie.tmdbMovieId);
+          return {
+            tmdbMovieId: movie.tmdbMovieId,
+            reason: movie.reason,
+            title: tmdbMovie.title,
+            overview: tmdbMovie.overview,
+            posterPath: tmdbMovie.poster_path,
+            voteAverage: tmdbMovie.vote_average,
+          };
+        }),
+      )
+    : null;
+
+  return {
+    id: recommendation.id,
+    userId: recommendation.userId,
+    status: recommendation.status,
+    createdAt: recommendation.createdAt,
+    movies,
+  };
 }
 
 export async function requestRecommendation(userId: number): Promise<RecommendationRecord> {
@@ -57,6 +101,20 @@ export async function requestRecommendation(userId: number): Promise<Recommendat
   return recommendation;
 }
 
-export async function getUserRecommendations(userId: number): Promise<RecommendationRecord[]> {
-  return getRecommendationsByUser(userId);
+export async function getUserRecommendations(userId: number): Promise<EnrichedRecommendation[]> {
+  const recommendations = await getRecommendationsByUser(userId);
+  return Promise.all(recommendations.map(enrichRecommendation));
+}
+
+export async function getUserRecommendationById(
+  id: number,
+  userId: number,
+): Promise<EnrichedRecommendation> {
+  const recommendation = await getRecommendationByIdForUser(id, userId);
+
+  if (!recommendation) {
+    throw new RecommendationsServiceError('NOT_FOUND', 'no se encontro la recomendacion');
+  }
+
+  return enrichRecommendation(recommendation);
 }

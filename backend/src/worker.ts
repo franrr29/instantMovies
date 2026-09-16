@@ -43,9 +43,11 @@ async function processRecommendationJob(job: Job<RecommendationJobData>): Promis
 
     logger.info({ recommendationId, result }, 'respuesta de groq validada');
 
-    await completeRecommendation(recommendationId, result.tmdbMovieId, result.reason);
+    const movies = result.map((movie) => ({ tmdbMovieId: movie.tmdbMovieId, reason: movie.reason }));
 
-    logger.info({ recommendationId, tmdbMovieId: result.tmdbMovieId }, 'recomendacion completada');
+    await completeRecommendation(recommendationId, movies);
+
+    logger.info({ recommendationId, movies }, 'recomendacion completada');
   } catch (err) {
     const maxAttempts = job.opts.attempts ?? 1;
 

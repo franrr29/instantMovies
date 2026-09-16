@@ -52,12 +52,11 @@ model Like {
 }
 
 model Recommendation {
-  id          Int                  @id @default(autoincrement())
-  userId      Int                  @map("user_id")
-  tmdbMovieId Int?                 @map("tmdb_movie_id")
-  reason      String?              @db.Text
-  status      RecommendationStatus @default(PENDING)
-  createdAt   DateTime             @default(now()) @map("created_at")
+  id        Int                  @id @default(autoincrement())
+  userId    Int                  @map("user_id")
+  movies    Json?
+  status    RecommendationStatus @default(PENDING)
+  createdAt DateTime             @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id])
 

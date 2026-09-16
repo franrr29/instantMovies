@@ -2,11 +2,20 @@ import Groq from 'groq-sdk';
 import { z } from 'zod';
 import { env } from './env';
 
-export const groqRecommendationSchema = z.object({
+const groqMovieSchema = z.object({
   title: z.string(),
   tmdbMovieId: z.number(),
   reason: z.string(),
 });
+
+// groq (modo response_format json_object) exige que la raiz del JSON sea un
+// objeto, no un array; se pide {"movies": [...]} y se transforma al array
+// de 3 peliculas que consume el resto del sistema
+export const groqRecommendationSchema = z
+  .object({
+    movies: z.array(groqMovieSchema).length(3),
+  })
+  .transform((data) => data.movies);
 
 export type GroqRecommendation = z.infer<typeof groqRecommendationSchema>;
 
@@ -25,9 +34,9 @@ function buildPrompt(likedMovies: { id: number; title: string; genres: string[] 
     likedList,
     '',
     `No recomiendes ninguna pelicula cuyo tmdbMovieId este en esta lista: ${likedIds}.`,
-    'Recomenda UNA sola pelicula distinta que el usuario probablemente disfrute, dado ese gusto.',
+    'Recomenda 3 peliculas distintas que el usuario probablemente disfrute, dado ese gusto.',
     'Respondé unicamente con un JSON valido, sin texto adicional ni markdown, con esta forma exacta:',
-    '{ "title": "...", "tmdbMovieId": number, "reason": "..." }',
+    '{ "movies": [ { "title": "...", "tmdbMovieId": number, "reason": "..." }, { "title": "...", "tmdbMovieId": number, "reason": "..." }, { "title": "...", "tmdbMovieId": number, "reason": "..." } ] }',
   ].join('\n');
 }
 
@@ -37,11 +46,11 @@ export async function generateRecommendation(
   const prompt = buildPrompt(likedMovies);
 
   const completion = await groq.chat.completions.create({
-  model: 'qwen/qwen3.8-27b',
-  messages: [{ role: 'user', content: prompt }],
-  response_format: { type: 'json_object' },
-  max_tokens: 200,
-});
+    model: 'qwen/qwen3.8-27b',
+    messages: [{ role: 'user', content: prompt }],
+    response_format: { type: 'json_object' },
+    max_tokens: 600,
+  });
 
   const rawContent = completion.choices[0]?.message?.content ?? '';
 

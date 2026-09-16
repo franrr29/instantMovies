@@ -18,11 +18,23 @@ const DEMO_LIKES = [
   { tmdbId: 424, title: "Schindler's List", posterPath: '/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg' },
 ];
 
-const DEMO_RECOMMENDATION = {
-  tmdbId: 238,
-  reason:
-    'Basado en tu gusto por thrillers con giros narrativos y dramas premiados, te recomendamos El Padrino por su narrativa intensa sobre poder y familia.',
-};
+const DEMO_RECOMMENDATION_MOVIES = [
+  {
+    tmdbMovieId: 238,
+    reason:
+      'Basado en tu gusto por thrillers con giros narrativos y dramas premiados, te recomendamos El Padrino por su narrativa intensa sobre poder y familia.',
+  },
+  {
+    tmdbMovieId: 680,
+    reason:
+      'Por tu afinidad con narrativas no lineales y giros argumentales, Pulp Fiction te va a enganchar con su estructura fragmentada.',
+  },
+  {
+    tmdbMovieId: 429,
+    reason:
+      'Dado tu gusto por dramas premiados con tension moral, El Bueno, el Malo y el Feo ofrece una epica igual de intensa.',
+  },
+];
 
 async function main() {
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, SALT_ROUNDS);
@@ -50,8 +62,7 @@ async function main() {
       data: {
         userId: user.id,
         status: RecommendationStatus.COMPLETED,
-        tmdbMovieId: DEMO_RECOMMENDATION.tmdbId,
-        reason: DEMO_RECOMMENDATION.reason,
+        movies: DEMO_RECOMMENDATION_MOVIES,
       },
     });
   }
