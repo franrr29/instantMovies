@@ -131,7 +131,7 @@ Todo salvo /auth requiere JWT válido.
 ## Qué NO hacer (decisiones ya descartadas)
 
 - NO usar OAuth ni Passport. La auth es username/password propia.
-- NO usar axios. Usar fetch nativo.
+- Usar axios via services/api.ts, nunca fetch directo. El frontend ya usa axios con interceptores configurados.
 - NO usar RabbitMQ. La cola es BullMQ.
 - NO implementar microservicios. Es monolito modular.
 - NO implementar token bucket manual. Usar el rate-limiter nativo de BullMQ.
