@@ -39,15 +39,26 @@ async function enrichRecommendation(recommendation: RecommendationRecord): Promi
   const movies = recommendation.movies
     ? await Promise.all(
         recommendation.movies.map(async (movie) => {
-          const tmdbMovie = await getMovieById(movie.tmdbMovieId);
-          return {
-            tmdbMovieId: movie.tmdbMovieId,
-            reason: movie.reason,
-            title: tmdbMovie.title,
-            overview: tmdbMovie.overview,
-            posterPath: tmdbMovie.poster_path,
-            voteAverage: tmdbMovie.vote_average,
-          };
+          try {
+            const tmdbMovie = await getMovieById(movie.tmdbMovieId);
+            return {
+              tmdbMovieId: movie.tmdbMovieId,
+              reason: movie.reason,
+              title: tmdbMovie.title,
+              overview: tmdbMovie.overview,
+              posterPath: tmdbMovie.poster_path,
+              voteAverage: tmdbMovie.vote_average,
+            };
+          } catch {
+            return {
+              tmdbMovieId: movie.tmdbMovieId,
+              reason: movie.reason,
+              title: '',
+              overview: '',
+              posterPath: null,
+              voteAverage: 0,
+            };
+          }
         }),
       )
     : null;
