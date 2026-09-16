@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import { Chat } from './pages/Chat';
@@ -23,10 +24,12 @@ function App() {
             <Route path="/register" element={<Register />} />
 
             <Route element={<ProtectedRoute />}>
-              <Route path="/movies" element={<MovieList />} />
-              <Route path="/likes" element={<Likes />} />
-              <Route path="/recommendations" element={<Recommendations />} />
-              <Route path="/chat" element={<Chat />} />
+              <Route element={<Layout />}>
+                <Route path="/movies" element={<MovieList />} />
+                <Route path="/likes" element={<Likes />} />
+                <Route path="/recommendations" element={<Recommendations />} />
+                <Route path="/chat" element={<Chat />} />
+              </Route>
             </Route>
           </Routes>
         </AuthProvider>
