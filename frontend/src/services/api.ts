@@ -12,7 +12,7 @@ export interface SkipAuthLogoutConfig {
 // la cookie httpOnly la maneja el navegador: withCredentials alcanza para
 // que viaje en cada request, no hay token que inyectar a mano
 export const api = axios.create({
-  baseURL: 'http://localhost:3000/api/v1',
+  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api/v1',
   withCredentials: true,
 });
 
