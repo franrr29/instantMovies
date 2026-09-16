@@ -1,3 +1,4 @@
+import { getMovieById } from '../../shared/tmdb';
 import {
   ALREADY_LIKED_MESSAGE,
   LIKE_NOT_FOUND_MESSAGE,
@@ -17,6 +18,40 @@ export class LikesServiceError extends Error {
     super(message);
     this.name = 'LikesServiceError';
     this.code = code;
+  }
+}
+
+export interface EnrichedLike {
+  tmdbMovieId: number;
+  title: string;
+  overview: string;
+  posterPath: string | null;
+  voteAverage: number;
+  createdAt: Date;
+}
+
+// mismo patron de resiliencia que enrichRecommendation en recommendations.service.ts:
+// si TMDB falla para una pelicula, se devuelven datos minimos en vez de romper el enriquecimiento
+async function enrichLike(like: LikeRecord): Promise<EnrichedLike> {
+  try {
+    const tmdbMovie = await getMovieById(like.tmdbMovieId);
+    return {
+      tmdbMovieId: like.tmdbMovieId,
+      title: tmdbMovie.title,
+      overview: tmdbMovie.overview,
+      posterPath: tmdbMovie.poster_path,
+      voteAverage: tmdbMovie.vote_average,
+      createdAt: like.createdAt,
+    };
+  } catch {
+    return {
+      tmdbMovieId: like.tmdbMovieId,
+      title: '',
+      overview: '',
+      posterPath: null,
+      voteAverage: 0,
+      createdAt: like.createdAt,
+    };
   }
 }
 
@@ -42,6 +77,7 @@ export async function removeLike(userId: number, tmdbMovieId: number): Promise<v
   }
 }
 
-export async function getUserLikes(userId: number): Promise<LikeRecord[]> {
-  return getLikesByUser(userId);
+export async function getUserLikes(userId: number): Promise<EnrichedLike[]> {
+  const likes = await getLikesByUser(userId);
+  return Promise.all(likes.map(enrichLike));
 }
