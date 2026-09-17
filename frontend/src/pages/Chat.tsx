@@ -112,7 +112,8 @@ export function Chat() {
         aria-hidden={!isOpen}
         className={cn(
           'fixed bottom-20 right-6 z-50 flex h-[500px] max-h-[70vh] w-[400px] max-w-[calc(100vw-3rem)]',
-          'origin-bottom-right flex-col border border-divider bg-gradient-to-b from-surface-raised to-bg shadow-lg',
+          'origin-bottom-right flex-col overflow-hidden rounded-2xl border border-divider',
+          'bg-gradient-to-b from-surface-raised to-bg shadow-[0_25px_60px_-12px_rgba(0,0,0,0.7)]',
           'transition-all duration-200 ease-out',
           isOpen ? 'scale-100 opacity-100' : 'pointer-events-none scale-95 opacity-0',
         )}
@@ -129,7 +130,7 @@ export function Chat() {
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
+        <div className="chat-scroll flex flex-1 flex-col gap-3 overflow-y-auto p-4">
           {messages.length === 0 && <p className="text-sm text-ink/60">Preguntame sobre películas.</p>}
 
           {messages.map((message, index) => (
@@ -176,8 +177,13 @@ export function Chat() {
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label={isOpen ? 'Cerrar chat' : 'Abrir chat'}
-        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full
-          border border-accent bg-accent text-2xl shadow-lg transition-transform hover:scale-105"
+        className={cn(
+          'fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full',
+          'border border-accent-dark/40 bg-accent text-2xl text-accent-ink',
+          'shadow-[0_10px_28px_-6px_rgba(0,0,0,0.55)] transition-all duration-200 ease-out',
+          'hover:scale-110 hover:bg-accent-light hover:shadow-[0_14px_36px_-6px_rgba(224,164,88,0.5)]',
+          'active:scale-95',
+        )}
       >
         {isOpen ? '×' : '🤖'}
       </button>
