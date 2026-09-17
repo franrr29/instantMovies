@@ -30,7 +30,9 @@ function createDeferred<T>() {
 }
 
 async function sendChatMessage(user: ReturnType<typeof userEvent.setup>, text: string) {
-  const input = screen.getByPlaceholderText('Escribí tu mensaje...');
+  await user.click(screen.getByRole('button', { name: 'Abrir chat' }));
+
+  const input = screen.getByPlaceholderText('Preguntame algo…');
   await user.type(input, text);
   await user.click(screen.getByRole('button', { name: 'Enviar' }));
 }
@@ -79,8 +81,8 @@ describe('Chat', () => {
 
     await sendChatMessage(user, 'hola');
 
-    expect(await screen.findByText('Pensando...')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Escribí tu mensaje...')).toBeDisabled();
+    expect(await screen.findByRole('status', { name: 'Escribiendo…' })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Preguntame algo…')).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Enviar' })).toBeDisabled();
 
     deferred.resolve({ reply: 'listo', movies: [] });

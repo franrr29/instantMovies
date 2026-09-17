@@ -3,7 +3,6 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
-import { Chat } from './pages/Chat';
 import { Landing } from './pages/Landing';
 import { Likes } from './pages/Likes';
 import { Login } from './pages/Login';
@@ -28,7 +27,6 @@ function App() {
                 <Route path="/movies" element={<MovieList />} />
                 <Route path="/likes" element={<Likes />} />
                 <Route path="/recommendations" element={<Recommendations />} />
-                <Route path="/chat" element={<Chat />} />
               </Route>
             </Route>
           </Routes>

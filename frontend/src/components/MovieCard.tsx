@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { PosterFallback } from './ui/PosterFallback';
 
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w342';
 const OVERVIEW_TRUNCATE_LENGTH = 240;
@@ -18,16 +19,30 @@ function truncateOverview(overview: string): string {
 
 export function MovieCard({ title, overview, posterPath, voteAverage, children }: MovieCardProps) {
   return (
-    <div>
-      {posterPath ? (
-        <img src={`${TMDB_IMAGE_BASE_URL}${posterPath}`} alt={title} />
-      ) : (
-        <div>sin poster</div>
-      )}
-      <h3>{title}</h3>
-      {voteAverage !== undefined && <p>rating: {voteAverage}</p>}
-      <p>{truncateOverview(overview)}</p>
-      {children}
+    <div className="flex flex-col border border-divider">
+      <div className="relative aspect-[2/3] bg-surface">
+        {posterPath ? (
+          <img
+            src={`${TMDB_IMAGE_BASE_URL}${posterPath}`}
+            alt={title}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <PosterFallback>Sin poster</PosterFallback>
+        )}
+      </div>
+
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        <h3 className="font-display text-base leading-tight">{title}</h3>
+
+        {voteAverage !== undefined && (
+          <p className="font-display text-xs tracking-wide text-accent">★ {voteAverage.toFixed(1)}</p>
+        )}
+
+        <p className="flex-1 text-xs leading-relaxed text-ink/70">{truncateOverview(overview)}</p>
+
+        {children}
+      </div>
     </div>
   );
 }

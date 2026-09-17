@@ -103,7 +103,7 @@ describe('MovieList', () => {
     expect(await screen.findByText(searchResult.title)).toBeInTheDocument();
   });
 
-  // click en "dar like" pega al backend y, tras el refetch de /likes, el boton cambia a "likeada"
+  // click en "Like" pega al backend y, tras el refetch de /likes, el boton cambia a "Liked"
   it('toggle like: click en el boton llama a POST /likes y despues muestra estado likeado', async () => {
     const movie = fakeMovie(1, 'Resident Evil');
     vi.mocked(getTrendingMovies).mockResolvedValue([movie]);
@@ -125,11 +125,11 @@ describe('MovieList', () => {
     renderMovieList();
 
     await screen.findByText(movie.title);
-    expect(screen.getByRole('button', { name: /dar like/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /like$/i })).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /dar like/ }));
+    await user.click(screen.getByRole('button', { name: /like$/i }));
 
     expect(addLike).toHaveBeenCalledWith(movie.id);
-    expect(await screen.findByRole('button', { name: /likeada/ })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /liked$/i })).toBeInTheDocument();
   });
 });

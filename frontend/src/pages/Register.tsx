@@ -1,6 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { AuthCard } from '../components/ui/AuthCard';
+import { FormField } from '../components/ui/FormField';
+import { btnPrimary } from '../components/ui/styles';
 import { useAuth } from '../context/AuthContext';
+import { cn } from '../lib/cn';
 import { getAuthErrorMessage, validatePasswordComplexity, validateUsername } from '../utils/authValidation';
 
 interface FieldErrors {
@@ -21,7 +25,7 @@ export function Register() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (isAuthLoading) {
-    return <div>Cargando...</div>;
+    return <div className="flex min-h-screen items-center justify-center bg-bg text-sm text-ink/60">Cargando...</div>;
   }
 
   if (user) {
@@ -58,56 +62,55 @@ export function Register() {
   }
 
   return (
-    <div>
-      <h1>Crear cuenta</h1>
-
-      <form onSubmit={handleSubmit} noValidate>
-        <div>
-          <label htmlFor="register-username">Username</label>
-          <input
+    <div className="flex min-h-screen items-center justify-center bg-bg px-6 py-16">
+      <AuthCard
+        tag="Enrol"
+        title="Create your account"
+        subtitle="Six likes and the projector rolls."
+        footer={
+          <>
+            ¿Ya tenés cuenta? <Link to="/login" className="text-accent hover:underline">Iniciá sesión</Link>
+          </>
+        }
+      >
+        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+          <FormField
             id="register-username"
+            label="Username"
             type="email"
             required
             value={username}
             onChange={(event) => setUsername(event.target.value)}
+            error={fieldErrors.username}
           />
-          {fieldErrors.username && <p>{fieldErrors.username}</p>}
-        </div>
 
-        <div>
-          <label htmlFor="register-password">Password</label>
-          <input
+          <FormField
             id="register-password"
+            label="Password"
             type="password"
             required
             value={password}
             onChange={(event) => setPassword(event.target.value)}
+            error={fieldErrors.password}
           />
-          {fieldErrors.password && <p>{fieldErrors.password}</p>}
-        </div>
 
-        <div>
-          <label htmlFor="register-confirm-password">Confirmar password</label>
-          <input
+          <FormField
             id="register-confirm-password"
+            label="Confirmar password"
             type="password"
             required
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
+            error={fieldErrors.confirmPassword}
           />
-          {fieldErrors.confirmPassword && <p>{fieldErrors.confirmPassword}</p>}
-        </div>
 
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Cargando...' : 'Crear cuenta'}
-        </button>
+          <button type="submit" disabled={isSubmitting} className={cn(btnPrimary, 'mt-2 w-full py-3.5')}>
+            {isSubmitting ? 'Cargando...' : 'Create account →'}
+          </button>
 
-        {formError && <p>{formError}</p>}
-      </form>
-
-      <p>
-        ¿Ya tenés cuenta? <Link to="/login">Iniciá sesión</Link>
-      </p>
+          {formError && <p className="text-center text-xs text-red-400">{formError}</p>}
+        </form>
+      </AuthCard>
     </div>
   );
 }

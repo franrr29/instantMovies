@@ -1,6 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { AuthCard } from '../components/ui/AuthCard';
+import { FormField } from '../components/ui/FormField';
+import { btnPrimary } from '../components/ui/styles';
 import { useAuth } from '../context/AuthContext';
+import { cn } from '../lib/cn';
 import { getAuthErrorMessage, validatePasswordRequired, validateUsername } from '../utils/authValidation';
 
 interface FieldErrors {
@@ -19,7 +23,7 @@ export function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (isAuthLoading) {
-    return <div>Cargando...</div>;
+    return <div className="flex min-h-screen items-center justify-center bg-bg text-sm text-ink/60">Cargando...</div>;
   }
 
   if (user) {
@@ -55,44 +59,45 @@ export function Login() {
   }
 
   return (
-    <div>
-      <h1>Iniciar sesión</h1>
-
-      <form onSubmit={handleSubmit} noValidate>
-        <div>
-          <label htmlFor="login-username">Username</label>
-          <input
+    <div className="flex min-h-screen items-center justify-center bg-bg px-6 py-16">
+      <AuthCard
+        tag="Session"
+        title="Sign in"
+        subtitle="Continue where you left off."
+        footer={
+          <>
+            ¿No tenés cuenta? <Link to="/register" className="text-accent hover:underline">Creá una</Link>
+          </>
+        }
+      >
+        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+          <FormField
             id="login-username"
+            label="Username"
             type="email"
             required
             value={username}
             onChange={(event) => setUsername(event.target.value)}
+            error={fieldErrors.username}
           />
-          {fieldErrors.username && <p>{fieldErrors.username}</p>}
-        </div>
 
-        <div>
-          <label htmlFor="login-password">Password</label>
-          <input
+          <FormField
             id="login-password"
+            label="Password"
             type="password"
             required
             value={password}
             onChange={(event) => setPassword(event.target.value)}
+            error={fieldErrors.password}
           />
-          {fieldErrors.password && <p>{fieldErrors.password}</p>}
-        </div>
 
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Cargando...' : 'Iniciar sesión'}
-        </button>
+          <button type="submit" disabled={isSubmitting} className={cn(btnPrimary, 'mt-2 w-full py-3.5')}>
+            {isSubmitting ? 'Cargando...' : 'Sign in →'}
+          </button>
 
-        {formError && <p>{formError}</p>}
-      </form>
-
-      <p>
-        ¿No tenés cuenta? <Link to="/register">Creá una</Link>
-      </p>
+          {formError && <p className="text-center text-xs text-red-400">{formError}</p>}
+        </form>
+      </AuthCard>
     </div>
   );
 }

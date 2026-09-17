@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { MovieCard } from '../components/MovieCard';
+import { LikeIcon } from '../components/ui/LikeIcon';
+import { PosterFallback } from '../components/ui/PosterFallback';
+import { btnSecondary, likeButtonLiked, sectionHeading } from '../components/ui/styles';
+import { cn } from '../lib/cn';
 import { getLikes, removeLike } from '../services/likesService';
 
 export function Likes() {
@@ -23,14 +27,16 @@ export function Likes() {
   }
 
   if (likesQuery.isLoading) {
-    return <div>Cargando...</div>;
+    return <div className="py-24 text-center text-sm text-ink/60">Cargando...</div>;
   }
 
   if (likesQuery.isError) {
     return (
-      <div>
-        <p>Ocurrió un error al cargar tus likes.</p>
-        <button onClick={() => likesQuery.refetch()}>Reintentar</button>
+      <div className="flex flex-col items-center gap-4 py-24 text-center">
+        <p className="text-sm text-ink/70">Ocurrió un error al cargar tus likes.</p>
+        <button onClick={() => likesQuery.refetch()} className={btnSecondary}>
+          Reintentar
+        </button>
       </div>
     );
   }
@@ -39,32 +45,41 @@ export function Likes() {
 
   if (likes.length === 0) {
     return (
-      <div>
-        <h1>Mis películas favoritas</h1>
-        <p>
-          Todavía no tenés películas favoritas. <Link to="/movies">Explorar películas</Link>
+      <div className="flex flex-col gap-4">
+        <h1 className={cn(sectionHeading, 'text-3xl sm:text-4xl')}>Mis películas favoritas</h1>
+        <p className="text-sm text-ink/70">
+          Todavía no tenés películas favoritas.{' '}
+          <Link to="/movies" className="text-accent hover:underline">
+            Explorar películas
+          </Link>
         </p>
       </div>
     );
   }
 
   return (
-    <div>
-      <h1>Mis películas favoritas</h1>
+    <div className="flex flex-col gap-8">
+      <h1 className={cn(sectionHeading, 'text-3xl sm:text-4xl')}>Mis películas favoritas</h1>
 
-      <div>
+      <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
         {likes.map((like) => {
           const removeButton = (
-            <button disabled={isRemoving(like.tmdbMovieId)} onClick={() => removeLikeMutation.mutate(like.tmdbMovieId)}>
-              Quitar like
+            <button
+              disabled={isRemoving(like.tmdbMovieId)}
+              onClick={() => removeLikeMutation.mutate(like.tmdbMovieId)}
+              className={likeButtonLiked}
+            >
+              <LikeIcon liked /> Quitar like
             </button>
           );
 
           if (!like.title) {
             return (
-              <div key={like.tmdbMovieId}>
-                <div>sin poster</div>
-                <p>tmdbMovieId: {like.tmdbMovieId}</p>
+              <div key={like.tmdbMovieId} className="flex flex-col gap-3 border border-divider p-4">
+                <div className="aspect-[2/3] bg-surface">
+                  <PosterFallback>Sin poster</PosterFallback>
+                </div>
+                <p className="text-xs text-ink/60">tmdbMovieId: {like.tmdbMovieId}</p>
                 {removeButton}
               </div>
             );
