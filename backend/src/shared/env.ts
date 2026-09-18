@@ -4,7 +4,7 @@ import { logger } from './logger';
 
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
-  JWT_SECRET: z.string().min(1),
+  JWT_SECRET: z.string().min(32),
   TMDB_API_KEY: z.string().min(1),
   GROQ_API_KEY: z.string().min(1),
   PORT: z.coerce.number().default(3001),
