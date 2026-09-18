@@ -112,7 +112,13 @@ Cada módulo separa routing (controller), lógica de negocio (service) y validac
 El chat se implementa como un modal flotante accesible desde un botón circular fijo en la esquina inferior derecha. Esto permite al usuario interactuar con el asistente de IA desde cualquier pantalla sin perder el contexto de navegación.
 
 ---
+## Diagramas de Arquitectura
 
+Diagramas interactivos generados con Archify (abrir los archivos HTML en el navegador):
+
+- **[Arquitectura general](docs/diagrams/architecture.html)** — Servicios, conexiones y flujo de datos
+- **[Flujo de recomendaciones](docs/diagrams/recommendations-flow.html)** — Pipeline asíncrono completo
+- **[Flujo del chat](docs/diagrams/chat-flow.html)** — Guard, tool calling y respuesta
 ## Testing
 
 ### Backend
