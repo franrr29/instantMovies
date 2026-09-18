@@ -3,6 +3,7 @@ import { z } from 'zod';
 // username invalido en dos pasos: entra un email valido, sale en lowercase
 const usernameSchema = z
   .string()
+  .max(191)
   .email('El username debe ser un email válido')
   .transform((value) => value.toLowerCase());
 
@@ -14,10 +15,10 @@ const PASSWORD_WEAK_MESSAGE =
 // reglas de contraseña solo aplican al alta, no tiene sentido exigirlas de nuevo en el login
 export const registerSchema = z.object({
   username: usernameSchema,
-  password: z.string().regex(PASSWORD_REGEX, PASSWORD_WEAK_MESSAGE),
+  password: z.string().max(72).regex(PASSWORD_REGEX, PASSWORD_WEAK_MESSAGE),
 });
 
 export const loginSchema = z.object({
   username: usernameSchema,
-  password: z.string().min(1),
+  password: z.string().min(1).max(72),
 });
