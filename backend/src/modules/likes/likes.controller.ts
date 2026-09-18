@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
+import { numericId } from '../../shared/validators';
 import { addLikeSchema } from './likes.schemas';
 import {LikesServiceError,addLike as addLikeService,getUserLikes as getUserLikesService,removeLike as removeLikeService,
 } from './likes.service';
@@ -33,13 +34,18 @@ export async function addLike(req: Request, res: Response, next: NextFunction) {
 export async function removeLike(req: Request, res: Response, next: NextFunction) {
   try {
 
-    const tmdbMovieId = Number(req.params.tmdbId);
+    const tmdbMovieId = numericId.parse(req.params.tmdbId);
     const userId = req.user!.id;
 
     await removeLikeService(userId, tmdbMovieId);
     res.status(204).send();
 
   } catch (err) {
+
+    if (err instanceof z.ZodError) {
+      res.status(400).json({ error: 'datos invalidos', details: err.flatten() });
+      return;
+    }
 
     if (err instanceof LikesServiceError && err.code === 'LIKE_NOT_FOUND') {
       res.status(404).json({ error: err.message });
