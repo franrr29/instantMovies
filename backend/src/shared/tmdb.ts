@@ -79,8 +79,8 @@ export interface DiscoverMoviesFilters {
 
 // busqueda por filtros (genero, año, rating minimo) en vez de por titulo,
 // usada por la tool discover_movies del chat
-export async function discoverMovies(filters: DiscoverMoviesFilters): Promise<TmdbMovie[]> {
-  const params: Record<string, string> = {};
+export async function discoverMovies(filters: DiscoverMoviesFilters, page = 1): Promise<TmdbMovie[]> {
+  const params: Record<string, string> = { page: String(page) };
 
   if (filters.genreIds && filters.genreIds.length > 0) {
     params.with_genres = filters.genreIds.join(',');

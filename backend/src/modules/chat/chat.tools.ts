@@ -1,5 +1,17 @@
 import type Groq from 'groq-sdk';
-import { discoverMovies, searchMovies } from '../../shared/tmdb';
+import { logger } from '../../shared/logger';
+import { type TmdbMovie, discoverMovies, searchMovies } from '../../shared/tmdb';
+
+const DISCOVER_MAX_PAGES = 3;
+
+// si tmdb falla, el modelo recibe igual un resultado de tool y responde sin romper el chat
+function toolFailedResult(err: unknown, toolName: string): string {
+  logger.warn(
+    { err, cause: err instanceof Error ? err.cause : undefined, toolName },
+    'fallo la busqueda en tmdb desde una tool del chat',
+  );
+  return JSON.stringify({ error: 'no se pudo buscar en tmdb en este momento' });
+}
 
 export interface ChatMovieResult {
   tmdbId: number;
@@ -59,6 +71,7 @@ export const discoverMovieTool: Groq.Chat.ChatCompletionTool = {
 export async function executeTool(
   toolCall: Groq.Chat.ChatCompletionMessageToolCall,
   movies: ChatMovieResult[],
+  excludedMovieIds: number[] = [],
 ): Promise<string> {
   let toolArgs: Record<string, unknown> | null;
 
@@ -73,7 +86,7 @@ export async function executeTool(
   }
 
   if (toolCall.function.name === 'discover_movies') {
-    const found = await discoverMovies({
+    const filters = {
       genreIds: Array.isArray(toolArgs.with_genres)
         ? (toolArgs.with_genres as number[])
         : undefined,
@@ -81,9 +94,26 @@ export async function executeTool(
         typeof toolArgs.primary_release_year === 'number' ? toolArgs.primary_release_year : undefined,
       minRating:
         typeof toolArgs['vote_average.gte'] === 'number' ? (toolArgs['vote_average.gte'] as number) : undefined,
-    });
+    };
 
-    const results = found.slice(0, 5);
+    const excluded = new Set(excludedMovieIds);
+    let results: TmdbMovie[] = [];
+
+    // las peliculas que el usuario ya vio en el historial no se repiten; si una pagina queda vacia tras filtrar,
+    // se pide la siguiente (hasta DISCOVER_MAX_PAGES) para encontrar resultados nuevos
+    try {
+      for (let page = 1; page <= DISCOVER_MAX_PAGES && results.length === 0; page += 1) {
+        const found = await discoverMovies(filters, page);
+
+        if (found.length === 0) {
+          break;
+        }
+
+        results = found.filter((movie) => !excluded.has(movie.id)).slice(0, 5);
+      }
+    } catch (err) {
+      return toolFailedResult(err, toolCall.function.name);
+    }
 
     movies.push(
       ...results.map((movie) => ({
@@ -104,7 +134,15 @@ export async function executeTool(
     return JSON.stringify({ error: 'argumentos invalidos' });
   }
 
-  const [found] = await searchMovies(toolArgs.title);
+  let results: TmdbMovie[];
+
+  try {
+    results = await searchMovies(toolArgs.title);
+  } catch (err) {
+    return toolFailedResult(err, toolCall.function.name);
+  }
+
+  const [found] = results;
 
   if (found) {
     movies.push({
