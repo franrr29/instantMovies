@@ -19,7 +19,13 @@ export const groqRecommendationSchema = z
 
 export type GroqRecommendation = z.infer<typeof groqRecommendationSchema>;
 
-export const groq = new Groq({ apiKey: env.GROQ_API_KEY });
+export const groq = new Groq({
+  apiKey: env.GROQ_API_KEY,
+  baseURL: 'https://groq.helicone.ai',
+  defaultHeaders: {
+    'Helicone-Auth': `Bearer ${env.HELICONE_API_KEY}`,
+  },
+});
 
 function buildPrompt(likedMovies: { id: number; title: string; genres: string[] }[]): string {
   const likedList = likedMovies

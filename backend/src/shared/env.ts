@@ -7,6 +7,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32),
   TMDB_API_KEY: z.string().min(1),
   GROQ_API_KEY: z.string().min(1),
+  HELICONE_API_KEY: z.string().min(1),
   PORT: z.coerce.number().default(3001),
   FRONTEND_URL: z.string().default('http://localhost:5173'),
   REDIS_URL: z.string().default('redis://localhost:6379'),
