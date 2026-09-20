@@ -59,6 +59,7 @@ instantMovies/
 │ └── src/
 │ ├── modules/
 │ │ ├── auth/ // controller, service, repo, rutas
+│ │ ├── chat/ // controller, service, repo, prompt, tools, schemas, rutas
 │ │ ├── movies/
 │ │ ├── likes/
 │ │ └── recommendations/
@@ -80,12 +81,15 @@ instantMovies/
 Todo lo de un dominio (controller, service, repo, rutas) vive junto en su carpeta.
 El módulo es la carpeta.
 
-## Modelo de datos (3 tablas)
+## Modelo de datos (4 tablas)
 
 - users: id, username, password_hash, created_at
 - likes: id, user_id (FK), tmdb_movie_id, created_at — UNIQUE (user_id, tmdb_movie_id)
-- recommendations: id, user_id (FK), tmdb_movie_id, reason, status, created_at
-  - status: pending | completed | failed
+- recommendations: id, user_id (FK), movies (JSON), status, created_at
+  - status: PENDING | COMPLETED | FAILED
+- chat_messages: id, user_id (FK), role, content (Text), tool_calls (JSON, nullable), tool_call_id (nullable), created_at — INDEX (user_id, created_at)
+  - role: USER | ASSISTANT | TOOL
+  - guarda la traza completa del tool calling: assistant con tool_calls, tool con su resultado (tool_call_id) y assistant final
 
 No se guarda catálogo de películas. TMDB es la fuente de verdad; solo se
 referencia tmdb_movie_id.
@@ -100,6 +104,7 @@ referencia tmdb_movie_id.
 - DELETE /likes/:tmdbId
 - POST   /recommendations     (responde 202 Accepted, NO el resultado)
 - GET    /recommendations     (lista con su status)
+- POST   /chat                (chat conversacional con tools TMDB)
 
 Todo salvo /auth requiere JWT válido.
 
@@ -135,7 +140,8 @@ Todo salvo /auth requiere JWT válido.
 - NO usar RabbitMQ. La cola es BullMQ.
 - NO implementar microservicios. Es monolito modular.
 - NO implementar token bucket manual. Usar el rate-limiter nativo de BullMQ.
-- NO usar function calling / tools en el LLM. El contexto se prepara antes de llamar.
+- NO usar function calling / tools en el worker de recomendaciones. El contexto se prepara antes de llamar.
+- El módulo de chat SÍ usa tools (search_movie, discover_movies) para buscar en TMDB en tiempo real.
 - NO duplicar el catálogo de TMDB en la DB.
 
 ## Comandos
