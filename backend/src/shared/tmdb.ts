@@ -1,7 +1,11 @@
 import { z } from 'zod';
 import { env } from './env';
+import { logger } from './logger';
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+const TMDB_TIMEOUT_MS = 5000;
+const TMDB_MAX_ATTEMPTS = 2;
+const TMDB_RETRY_DELAY_MS = 1000;
 
 const tmdbMovieSchema = z.object({
   id: z.number(),
@@ -97,11 +101,32 @@ export async function discoverMovies(filters: DiscoverMoviesFilters, page = 1): 
   return fetchFromTmdb('/discover/movie', params);
 }
 
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// reintenta solo fallos de red/timeout (fetch lanza); los status http no-ok se manejan aguas abajo
+async function fetchMovieWithRetry(url: URL, tmdbMovieId: number): Promise<Response> {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await fetch(url, { signal: AbortSignal.timeout(TMDB_TIMEOUT_MS) });
+    } catch (err) {
+      logger.warn({ err, cause: err instanceof Error ? err.cause : undefined, tmdbMovieId, attempt }, 'fallo el fetch a tmdb');
+
+      if (attempt >= TMDB_MAX_ATTEMPTS) {
+        throw err;
+      }
+
+      await delay(TMDB_RETRY_DELAY_MS);
+    }
+  }
+}
+
 export async function getMovieById(tmdbMovieId: number): Promise<TmdbMovieDetails> {
   const url = new URL(`${TMDB_BASE_URL}/movie/${tmdbMovieId}`);
   url.searchParams.set('api_key', getApiKey());
 
-  const response = await fetch(url);
+  const response = await fetchMovieWithRetry(url, tmdbMovieId);
 
   if (!response.ok) {
     throw new Error(`tmdb respondio con status ${response.status}`);

@@ -1,4 +1,5 @@
 import { RecommendationStatus } from '../../generated/prisma/client';
+import { logger } from '../../shared/logger';
 import { getMovieById } from '../../shared/tmdb';
 import { getLikesByUser } from '../likes/likes.repository';
 import { getRecommendationsByUser } from '../recommendations/recommendations.repository';
@@ -7,12 +8,22 @@ import { getRecommendationsByUser } from '../recommendations/recommendations.rep
 export async function buildSystemPrompt(userId: number): Promise<string> {
   const likes = (await getLikesByUser(userId)).slice(0, 10);
 
-  const likedMovies = await Promise.all(
+  const likedResults = await Promise.allSettled(
     likes.map(async (like) => {
       const movie = await getMovieById(like.tmdbMovieId);
       return { title: movie.title, genres: movie.genres.map((genre) => genre.name) };
     }),
   );
+
+  // una pelicula que falla en tmdb no debe tumbar el chat: se sigue solo con las que resolvieron
+  const likedMovies = likedResults.flatMap((result, index) => {
+    if (result.status === 'fulfilled') {
+      return [result.value];
+    }
+
+    logger.warn({ err: result.reason, tmdbMovieId: likes[index]?.tmdbMovieId }, 'no se pudo obtener una pelicula liked de tmdb para el prompt del chat');
+    return [];
+  });
 
   const likedList =
     likedMovies
