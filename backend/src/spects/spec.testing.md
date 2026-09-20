@@ -85,6 +85,25 @@ handleChatMessage devuelve BLOCKED_REPLY sin llamar a Groq
 
 Método: mockear shared/guard, shared/sanitize, chat.repository, shared/groq.
 
+Señales de pedido de películas (asksForMovies):
+
+"hola" → false, "dame un momento" → false, "terrorismo en las noticias" → false (la keyword no puede ser substring de otra palabra)
+"recomendame una" → true, "otra" → true, "quiero una de acción" → true
+
+Compactación del resultado de tool (compactToolResult):
+
+Lista de películas → solo tmdbId y title
+JSON de error o string que no es JSON → se mantiene igual
+
+Películas ya vistas (collectSeenMovieIds): junta los tmdbId de los mensajes TOOL del historial
+
+Tools — chat.tools.test.ts
+
+discover_movies excluye los ids ya vistos; si la página queda vacía pide la siguiente (máx. page 3)
+discover_movies con TMDB caído devuelve { error } sin lanzar; search_movie no filtra por ids vistos
+
+Método: mockear shared/tmdb y shared/logger.
+
 Worker — worker.test.ts
 
 Job exitoso:
