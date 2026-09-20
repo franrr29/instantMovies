@@ -35,6 +35,8 @@ describe('chat.service handleChatMessage', () => {
       userId: 1,
       role: ChatMessageRole.USER,
       content: '',
+      toolCalls: null,
+      toolCallId: null,
       createdAt: new Date(),
     });
   });

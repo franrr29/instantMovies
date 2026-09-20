@@ -24,6 +24,7 @@ enum RecommendationStatus {
 enum ChatMessageRole {
   USER
   ASSISTANT
+  TOOL
 }
 
 model User {
@@ -64,11 +65,14 @@ model Recommendation {
 }
 
 model ChatMessage {
-  id        Int             @id @default(autoincrement())
-  userId    Int             @map("user_id")
-  role      ChatMessageRole
-  content   String          @db.Text
-  createdAt DateTime        @default(now()) @map("created_at")
+  id         Int             @id @default(autoincrement())
+  userId     Int             @map("user_id")
+  role       ChatMessageRole
+  content    String          @db.Text
+  // traza de tool calling: toolCalls en el assistant que pidio la tool, toolCallId en el mensaje tool con su resultado
+  toolCalls  Json?           @map("tool_calls")
+  toolCallId String?         @map("tool_call_id")
+  createdAt  DateTime        @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id])
 

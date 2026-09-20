@@ -4,7 +4,7 @@ import { groq } from '../../shared/groq';
 import { checkMessageSafety } from '../../shared/guard';
 import { logger } from '../../shared/logger';
 import { sanitizeMessage } from '../../shared/sanitize';
-import { getMessagesByUser, saveMessage } from './chat.repository';
+import { type ChatMessageRecord, getMessagesByUser, saveMessage } from './chat.repository';
 import { buildSystemPrompt } from './chat.prompt';
 import { type ChatMovieResult, discoverMovieTool, executeTool, searchMovieTool } from './chat.tools';
 
@@ -74,8 +74,48 @@ async function runToolCallingLoop(
   }
 }
 
+// la ventana de historial puede cortar una traza por la mitad, y un mensaje tool sin su assistant
+// tool_call hace que groq rechace el request; por eso se arranca siempre en un turno de usuario
+function startAtFirstUserTurn(history: ChatMessageRecord[]): ChatMessageRecord[] {
+  const firstUserIndex = history.findIndex((entry) => entry.role === ChatMessageRole.USER);
+  return firstUserIndex === -1 ? [] : history.slice(firstUserIndex);
+}
 
+// reconstruye el mensaje tal como lo vio groq: los assistant con tool_calls y los tool con su tool_call_id
+function toGroqMessage(entry: ChatMessageRecord): Groq.Chat.ChatCompletionMessageParam {
+  if (entry.role === ChatMessageRole.TOOL) {
+    return { role: 'tool', tool_call_id: entry.toolCallId ?? '', content: entry.content };
+  }
 
+  if (entry.role === ChatMessageRole.ASSISTANT && entry.toolCalls) {
+    return {
+      role: 'assistant',
+      content: entry.content || null,
+      tool_calls: entry.toolCalls as unknown as Groq.Chat.ChatCompletionMessageToolCall[],
+    };
+  }
+
+  return { role: entry.role === ChatMessageRole.USER ? 'user' : 'assistant', content: entry.content };
+}
+
+// persiste la traza del tool calling (assistant con tool_call + tool con su resultado) en el orden en que ocurrio,
+// para que los turnos siguientes vean el patron completo y el modelo siga usando tools
+async function saveToolTrace(userId: number, trace: Groq.Chat.ChatCompletionMessageParam[]): Promise<void> {
+  for (const entry of trace) {
+    if (entry.role === 'assistant') {
+      await saveMessage(userId, ChatMessageRole.ASSISTANT, typeof entry.content === 'string' ? entry.content : '', {
+        toolCalls: entry.tool_calls,
+      });
+    } else if (entry.role === 'tool') {
+      await saveMessage(
+        userId,
+        ChatMessageRole.TOOL,
+        typeof entry.content === 'string' ? entry.content : JSON.stringify(entry.content),
+        { toolCallId: entry.tool_call_id },
+      );
+    }
+  }
+}
 
 export async function handleChatMessage(
   userId: number,
@@ -107,15 +147,15 @@ export async function handleChatMessage(
 
     const messages: Groq.Chat.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },
-      ...history.map((entry) => ({
-        role: (entry.role === ChatMessageRole.USER ? 'user' : 'assistant') as 'user' | 'assistant',
-        content: entry.content,
-      })),
+      ...startAtFirstUserTurn(history).map(toGroqMessage),
     ];
 
+    // runToolCallingLoop agrega a messages los assistant tool_call y los tool de este turno; eso es la traza a persistir
+    const historyLength = messages.length;
     const movies: ChatMovieResult[] = [];
     const reply = await runToolCallingLoop(messages, movies);
 
+    await saveToolTrace(userId, messages.slice(historyLength));
     await saveMessage(userId, ChatMessageRole.ASSISTANT, reply);
 
     return { reply, movies };
