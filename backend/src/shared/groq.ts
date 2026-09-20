@@ -1,10 +1,13 @@
 import Groq from 'groq-sdk';
 import { z } from 'zod';
 import { env } from './env';
+import { logger } from './logger';
+import { searchMovies } from './tmdb';
 
+// groq solo devuelve titulo y razon: los LLMs no conocen los IDs de TMDB y los
+// inventan, asi que el ID real se resuelve despues buscando el titulo en TMDB
 const groqMovieSchema = z.object({
   title: z.string(),
-  tmdbMovieId: z.number(),
   reason: z.string(),
 });
 
@@ -29,26 +32,30 @@ export const groq = new Groq({
 
 function buildPrompt(likedMovies: { id: number; title: string; genres: string[] }[]): string {
   const likedList = likedMovies
-    .map((movie) => `- (tmdbMovieId: ${movie.id}) ${movie.title} — generos: ${movie.genres.join(', ') || 'sin genero'}`)
+    .map((movie) => `- ${movie.title} — generos: ${movie.genres.join(', ') || 'sin genero'}`)
     .join('\n');
-
-  const likedIds = likedMovies.map((movie) => movie.id).join(', ');
 
   return [
     'Sos un sistema de recomendacion de peliculas.',
     'El usuario marco como "me gusta" estas peliculas:',
     likedList,
     '',
-    `No recomiendes ninguna pelicula cuyo tmdbMovieId este en esta lista: ${likedIds}.`,
+    'No recomiendes ninguna pelicula que ya este en esa lista.',
     'Recomenda 3 peliculas distintas que el usuario probablemente disfrute, dado ese gusto.',
     'Respondé unicamente con un JSON valido, sin texto adicional ni markdown, con esta forma exacta:',
-    '{ "movies": [ { "title": "...", "tmdbMovieId": number, "reason": "..." }, { "title": "...", "tmdbMovieId": number, "reason": "..." }, { "title": "...", "tmdbMovieId": number, "reason": "..." } ] }',
+    '{ "movies": [ { "title": "...", "reason": "..." }, { "title": "...", "reason": "..." }, { "title": "...", "reason": "..." } ] }',
   ].join('\n');
+}
+
+export interface ResolvedRecommendation {
+  title: string;
+  tmdbMovieId: number;
+  reason: string;
 }
 
 export async function generateRecommendation(
   likedMovies: { id: number; title: string; genres: string[] }[],
-): Promise<GroqRecommendation> {
+): Promise<ResolvedRecommendation[]> {
   const prompt = buildPrompt(likedMovies);
 
   const completion = await groq.chat.completions.create({
@@ -60,5 +67,36 @@ export async function generateRecommendation(
 
   const rawContent = completion.choices[0]?.message?.content ?? '';
 
-  return groqRecommendationSchema.parse(JSON.parse(rawContent));
+  const recommended = groqRecommendationSchema.parse(JSON.parse(rawContent));
+
+  // allSettled: que falle la busqueda de un titulo no tira las demas
+  const searches = await Promise.allSettled(recommended.map((movie) => searchMovies(movie.title)));
+
+  const resolved: ResolvedRecommendation[] = [];
+
+  searches.forEach((search, index) => {
+    const { title, reason } = recommended[index];
+
+    if (search.status === 'rejected') {
+      logger.warn({ err: search.reason, title }, 'fallo la busqueda en tmdb, se descarta la pelicula');
+      return;
+    }
+
+    const match = search.value[0];
+
+    if (!match) {
+      logger.warn({ title }, 'tmdb no encontro la pelicula recomendada, se descarta');
+      return;
+    }
+
+    resolved.push({ title, tmdbMovieId: match.id, reason });
+  });
+
+  // sin ninguna pelicula resuelta no hay nada valido que persistir: se lanza
+  // para que el worker reintente / marque failed en vez de guardar una lista vacia
+  if (resolved.length === 0) {
+    throw new Error('tmdb no pudo resolver ninguna de las peliculas recomendadas por groq');
+  }
+
+  return resolved;
 }

@@ -145,17 +145,17 @@ describe('recommendations.service', () => {
 
     it('rechaza cuando el array no tiene exactamente 3 peliculas', () => {
       const result = groqRecommendationSchema.safeParse({
-        movies: [{ title: 'A', tmdbMovieId: 1, reason: 'x' }],
+        movies: [{ title: 'A', reason: 'x' }],
       });
       expect(result.success).toBe(false);
     });
 
-    it('rechaza cuando tmdbMovieId no es un numero', () => {
+    it('rechaza cuando a una pelicula le falta reason', () => {
       const result = groqRecommendationSchema.safeParse({
         movies: [
-          { title: 'A', tmdbMovieId: 'no-es-numero', reason: 'x' },
-          { title: 'B', tmdbMovieId: 2, reason: 'y' },
-          { title: 'C', tmdbMovieId: 3, reason: 'z' },
+          { title: 'A' },
+          { title: 'B', reason: 'y' },
+          { title: 'C', reason: 'z' },
         ],
       });
       expect(result.success).toBe(false);
