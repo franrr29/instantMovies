@@ -114,11 +114,11 @@ El chat se implementa como un modal flotante accesible desde un botón circular 
 ---
 ## Diagramas de Arquitectura
 
-Diagramas interactivos generados con Archify (abrir los archivos HTML en el navegador):
+Diagramas interactivos generados con Archify, publicados en GitHub Pages:
 
-- **[Arquitectura general](docs/diagrams/architecture.html)** — Servicios, conexiones y flujo de datos
-- **[Flujo de recomendaciones](docs/diagrams/recommendations-flow.html)** — Pipeline asíncrono completo
-- **[Flujo del chat](docs/diagrams/chat-flow.html)** — Guard, tool calling y respuesta
+- **[Arquitectura general](https://franrr29.github.io/instantMovies/docs/diagrams/architecture.html)** — Los 5 servicios de Docker Compose, Groq vía Helicone y el módulo chat
+- **[Flujo de recomendaciones](https://franrr29.github.io/instantMovies/docs/diagrams/recommendations-flow.html)** — Pipeline asíncrono: Groq devuelve títulos y el worker los resuelve en TMDB
+- **[Flujo del chat](https://franrr29.github.io/instantMovies/docs/diagrams/chat-flow.html)** — Guard, tool calling con `search_movie` y `discover_movies`, y traza persistida
 ## Testing
 
 ### Backend
