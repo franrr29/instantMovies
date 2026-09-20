@@ -1,0 +1,108 @@
+import type Groq from 'groq-sdk';
+import { ChatMessageRole } from '../../generated/prisma/client';
+import { groq } from '../../shared/groq';
+import type { ChatMessageRecord } from './chat.repository';
+import { type ChatMovieResult, discoverMovieTool, executeTool, searchMovieTool } from './chat.tools';
+
+const CHAT_MODEL = 'qwen/qwen3.8-27b';
+const CHAT_TIMEOUT_MS = 30000;
+const MAX_TOOL_CALLS = 3;
+
+// una ventana de historial cortada puede dejar un mensaje tool sin su assistant tool_call, y groq
+// rechaza el request; por eso el historial arranca siempre en un turno de usuario
+export function startAtFirstUserTurn(history: ChatMessageRecord[]): ChatMessageRecord[] {
+  const firstUserIndex = history.findIndex((entry) => entry.role === ChatMessageRole.USER);
+  return firstUserIndex === -1 ? [] : history.slice(firstUserIndex);
+}
+
+export function toGroqMessage(entry: ChatMessageRecord): Groq.Chat.ChatCompletionMessageParam {
+  if (entry.role === ChatMessageRole.TOOL) {
+    return { role: 'tool', tool_call_id: entry.toolCallId ?? '', content: entry.content };
+  }
+
+  if (entry.role === ChatMessageRole.ASSISTANT && entry.toolCalls) {
+    return {
+      role: 'assistant',
+      content: entry.content || null,
+      tool_calls: entry.toolCalls as unknown as Groq.Chat.ChatCompletionMessageToolCall[],
+    };
+  }
+
+  return { role: entry.role === ChatMessageRole.USER ? 'user' : 'assistant', content: entry.content };
+}
+
+async function callGroqChat(
+  messages: Groq.Chat.ChatCompletionMessageParam[],
+  tools?: Groq.Chat.ChatCompletionTool[],
+  toolChoice?: 'auto' | 'required',
+): Promise<Groq.Chat.ChatCompletion> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), CHAT_TIMEOUT_MS);
+
+  try {
+    return await groq.chat.completions.create(
+      { model: CHAT_MODEL, messages, tools, tool_choice: toolChoice, max_tokens: 400 },
+      { signal: controller.signal },
+    );
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function runToolCallingLoop(
+  messages: Groq.Chat.ChatCompletionMessageParam[],
+  movies: ChatMovieResult[],
+  forceTool: boolean,
+  seenMovieIds: number[],
+): Promise<string> {
+  let toolCallsUsed = 0;
+
+  while (true) {
+    // solo la primera vuelta fuerza la tool; con el resultado ya en el contexto el modelo decide
+    const toolChoice = forceTool && toolCallsUsed === 0 ? 'required' : 'auto';
+    const completion = await callGroqChat(messages, [searchMovieTool, discoverMovieTool], toolChoice);
+    const responseMessage = completion.choices[0]?.message;
+    const toolCall = responseMessage?.tool_calls?.[0];
+
+    if (!toolCall || toolCallsUsed >= MAX_TOOL_CALLS) {
+      const content = responseMessage?.content;
+
+      // groq a veces devuelve el resultado del tool sin texto; le pedimos que lo redacte, ya sin tools
+      if (!content && movies.length > 0) {
+        const finalCompletion = await callGroqChat(messages);
+        return finalCompletion.choices[0]?.message?.content ?? '';
+      }
+
+      return content ?? '';
+    }
+
+    toolCallsUsed += 1;
+
+    messages.push({
+      role: 'assistant',
+      content: responseMessage?.content ?? null,
+      tool_calls: [toolCall],
+    });
+
+    // executeTool no lanza si tmdb falla: devuelve un resultado de error para el modelo
+    const toolResultContent = await executeTool(toolCall, movies, seenMovieIds);
+
+    messages.push({
+      role: 'tool',
+      tool_call_id: toolCall.id,
+      content: toolResultContent,
+    });
+  }
+}
+
+// agrega a messages los assistant tool_call y los tool del turno; el llamador los persiste como traza
+export async function processChatTurn(
+  messages: Groq.Chat.ChatCompletionMessageParam[],
+  seenMovieIds: number[],
+  forceTool: boolean,
+): Promise<{ reply: string; movies: ChatMovieResult[] }> {
+  const movies: ChatMovieResult[] = [];
+  const reply = await runToolCallingLoop(messages, movies, forceTool, seenMovieIds);
+
+  return { reply, movies };
+}

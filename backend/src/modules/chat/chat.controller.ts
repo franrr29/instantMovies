@@ -3,8 +3,6 @@ import { z } from 'zod';
 import { sendChatMessageSchema } from './chat.schemas';
 import { handleChatMessage } from './chat.service';
 
-
-//funcion para manejar el envio de mensajes de chat:
 export async function sendMessage(req: Request, res: Response, next: NextFunction) {
   try {
 

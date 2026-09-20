@@ -4,7 +4,7 @@ import { type TmdbMovie, discoverMovies, searchMovies } from '../../shared/tmdb'
 
 const DISCOVER_MAX_PAGES = 3;
 
-// si tmdb falla, el modelo recibe igual un resultado de tool y responde sin romper el chat
+// si tmdb falla, el modelo recibe un resultado de error en vez de que se rompa el chat
 function toolFailedResult(err: unknown, toolName: string): string {
   logger.warn(
     { err, cause: err instanceof Error ? err.cause : undefined, toolName },
@@ -21,7 +21,6 @@ export interface ChatMovieResult {
   overview: string;
 }
 
-//tool que busca peliculas en TMDB por titulo:
 export const searchMovieTool: Groq.Chat.ChatCompletionTool = {
   type: 'function',
   function: {
@@ -38,7 +37,6 @@ export const searchMovieTool: Groq.Chat.ChatCompletionTool = {
   },
 };
 
-//tool que busca peliculas en TMDB por filtros (genero, año, rating), en vez de por titulo:
 export const discoverMovieTool: Groq.Chat.ChatCompletionTool = {
   type: 'function',
   function: {
@@ -66,8 +64,6 @@ export const discoverMovieTool: Groq.Chat.ChatCompletionTool = {
   },
 };
 
-// ejecuta la tool que haya elegido el modelo (search_movie o discover_movies) y
-// devuelve el content que se le manda de vuelta como resultado de la tool call
 export async function executeTool(
   toolCall: Groq.Chat.ChatCompletionMessageToolCall,
   movies: ChatMovieResult[],
@@ -99,8 +95,7 @@ export async function executeTool(
     const excluded = new Set(excludedMovieIds);
     let results: TmdbMovie[] = [];
 
-    // las peliculas que el usuario ya vio en el historial no se repiten; si una pagina queda vacia tras filtrar,
-    // se pide la siguiente (hasta DISCOVER_MAX_PAGES) para encontrar resultados nuevos
+    // no repite peliculas ya vistas: si al filtrar la pagina queda vacia, prueba la siguiente
     try {
       for (let page = 1; page <= DISCOVER_MAX_PAGES && results.length === 0; page += 1) {
         const found = await discoverMovies(filters, page);
@@ -125,7 +120,6 @@ export async function executeTool(
       })),
     );
 
-    //para que el llm use como resultado en su respuesta al usuario
     return JSON.stringify(results.length > 0 ? results : { error: 'no se encontraron resultados en tmdb' });
   }
 

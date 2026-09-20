@@ -15,7 +15,7 @@ export async function buildSystemPrompt(userId: number): Promise<string> {
     }),
   );
 
-  // una pelicula que falla en tmdb no debe tumbar el chat: se sigue solo con las que resolvieron
+  // un like que falla en tmdb no tumba el chat: se sigue con los que resolvieron
   const likedMovies = likedResults.flatMap((result, index) => {
     if (result.status === 'fulfilled') {
       return [result.value];

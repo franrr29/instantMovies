@@ -1,4 +1,4 @@
-// tests unitarios de chat.service: mensaje bloqueado por sanitizacion, mensaje bloqueado por guard
+// tests unitarios del modulo chat: chat.service (mensaje bloqueado por sanitizacion o por guard) y chat.utils
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChatMessageRole } from '../generated/prisma/client';
 
@@ -23,7 +23,8 @@ import { groq } from '../shared/groq';
 import { checkMessageSafety } from '../shared/guard';
 import { saveMessage } from '../modules/chat/chat.repository';
 import { sanitizeMessage } from '../shared/sanitize';
-import { asksForMovies, collectSeenMovieIds, compactToolResult, handleChatMessage } from '../modules/chat/chat.service';
+import { handleChatMessage } from '../modules/chat/chat.service';
+import { asksForMovies, collectSeenMovieIds, compactToolResult } from '../modules/chat/chat.utils';
 
 const BLOCKED_REPLY = 'Solo puedo ayudarte con peliculas y entretenimiento.';
 
@@ -62,7 +63,7 @@ describe('chat.service handleChatMessage', () => {
   });
 });
 
-describe('chat.service asksForMovies', () => {
+describe('chat.utils asksForMovies', () => {
   it.each([
     ['recomendame una', true],
     ['otra', true],
@@ -78,7 +79,7 @@ describe('chat.service asksForMovies', () => {
   });
 });
 
-describe('chat.service compactToolResult', () => {
+describe('chat.utils compactToolResult', () => {
   it('deja solo tmdbId y title por cada pelicula de una lista', () => {
     const content = JSON.stringify([
       { id: 1, title: 'Uno', overview: 'largo', poster_path: '/a.jpg', vote_average: 7.5 },
@@ -108,7 +109,7 @@ describe('chat.service compactToolResult', () => {
   });
 });
 
-describe('chat.service collectSeenMovieIds', () => {
+describe('chat.utils collectSeenMovieIds', () => {
   const record = (role: ChatMessageRole, content: string) => ({
     id: 1,
     userId: 1,
