@@ -69,7 +69,7 @@ Nota: el campo se llama tmdbId (no tmdbMovieId como en otros endpoints) y rating
 Herramientas
 No usar TanStack Query — el chat no es server state cacheable, es interacción en tiempo real
 useMutation tampoco encaja bien acá — usar un handler async con estado local (loading, error)
-Crear services/chatService.ts con sendMessage(message: string)
+Crear services/chatService.ts con sendChatMessage(message: string)
 axios via services/api.ts
 Reutilizar MovieCard (adaptar si las props difieren: tmdbId vs tmdbMovieId, rating vs voteAverage)
 No incluir
