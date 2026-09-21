@@ -2,6 +2,8 @@
 import type { Job } from 'bullmq';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+
+
 // bullmq (y por lo tanto redis) nunca se conecta de verdad: se captura el
 // processor que worker.ts le pasa a `new Worker(...)` y se lo invoca a mano.
 // tiene que ser una clase real (no un arrow function) porque `new Worker(...)`
@@ -49,6 +51,8 @@ vi.mock('../shared/tmdb', () => ({
   getMovieById: vi.fn(),
 }));
 
+
+
 import { getLikesByUser } from '../modules/likes/likes.repository';
 import { completeRecommendation, failRecommendation } from '../modules/recommendations/recommendations.repository';
 import { generateRecommendation } from '../shared/groq';
@@ -56,6 +60,8 @@ import { getMovieById } from '../shared/tmdb';
 
 // dispara el `new Worker(...)` (mockeado) y con eso captura el processor real
 import '../worker';
+
+
 
 function fakeTmdbMovie(tmdbMovieId: number) {
   return {
@@ -69,6 +75,8 @@ function fakeTmdbMovie(tmdbMovieId: number) {
   };
 }
 
+
+
 function buildJob(overrides: { attempts?: number; attemptsMade?: number } = {}): Job {
   return {
     data: { recommendationId: 1, userId: 1 },
@@ -76,6 +84,8 @@ function buildJob(overrides: { attempts?: number; attemptsMade?: number } = {}):
     attemptsMade: overrides.attemptsMade ?? 0,
   } as unknown as Job;
 }
+
+
 
 describe('worker processRecommendationJob', () => {
   beforeEach(() => {

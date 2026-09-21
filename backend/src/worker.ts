@@ -1,5 +1,6 @@
-import './shared/env';
 import { Worker, type Job } from 'bullmq';
+
+import './shared/env';
 import { getLikesByUser } from './modules/likes/likes.repository';
 import {
   completeRecommendation,
@@ -11,10 +12,14 @@ import { generateRecommendation } from './shared/groq';
 import { logger } from './shared/logger';
 import { getMovieById } from './shared/tmdb';
 
+
+
 interface RecommendationJobData {
   recommendationId: number;
   userId: number;
 }
+
+
 
 async function processRecommendationJob(job: Job<RecommendationJobData>): Promise<void> {
   const { recommendationId, userId } = job.data;
@@ -67,6 +72,8 @@ async function processRecommendationJob(job: Job<RecommendationJobData>): Promis
   }
 }
 
+
+
 export const recommendationWorker = new Worker<RecommendationJobData>(
   'recommendations',
   processRecommendationJob,
@@ -78,6 +85,8 @@ export const recommendationWorker = new Worker<RecommendationJobData>(
 );
 
 logger.info('worker de recomendaciones arrancado');
+
+
 
 async function shutdown(signal: string) {
   logger.info({ signal }, 'señal recibida, iniciando apagado prolijo del worker');
@@ -100,6 +109,8 @@ async function shutdown(signal: string) {
     process.exit(1);
   }
 }
+
+
 
 process.on('SIGTERM', () => {
   shutdown('SIGTERM');

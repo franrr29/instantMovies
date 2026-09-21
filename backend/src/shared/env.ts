@@ -1,6 +1,9 @@
 import 'dotenv/config';
 import { z } from 'zod';
+
 import { logger } from './logger';
+
+
 
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1),

@@ -1,5 +1,8 @@
 import type { NextFunction, Request, Response } from 'express';
+
 import { logger } from './logger';
+
+
 
 // contrato minimo que cualquier error de negocio debe cumplir para que este
 // handler sepa que status devolver, sin conocer los codigos de cada modulo
@@ -7,6 +10,8 @@ export interface HttpError extends Error {
   statusCode?: number;
   type?: string;
 }
+
+
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function errorHandler(err: HttpError, req: Request, res: Response, next: NextFunction) {

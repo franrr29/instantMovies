@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react';
+
 import { eyebrowLabel } from './styles';
+
+
 
 export function Eyebrow({ children }: { children: ReactNode }) {
   return (

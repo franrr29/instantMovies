@@ -3,13 +3,13 @@
 // Paleta y tipografia en tailwind.config.ts.
 import { cn } from '../../lib/cn';
 
+
+
 export const eyebrowLabel = 'font-display text-[11px] uppercase tracking-[0.28em] text-muted';
 
 export const sectionHeading = 'font-display leading-none tracking-tight text-ink';
 
 export const panel = 'border border-divider bg-gradient-to-b from-surface-raised to-bg';
-
-export const divider = 'border-divider';
 
 export const inputClasses = cn(
   'w-full min-h-[38px] border border-divider bg-transparent px-3 py-2',
@@ -32,11 +32,6 @@ export const btnSecondary = cn(btnBase, 'border-divider bg-transparent px-6 py-3
 export const tagOutline = cn(
   'inline-flex items-center border border-accent px-3 py-1.5',
   'font-display text-[11px] uppercase tracking-[0.16em] text-accent',
-);
-
-export const tagMuted = cn(
-  'inline-flex items-center border border-divider px-3 py-1.5',
-  'font-display text-[11px] uppercase tracking-[0.16em] text-muted',
 );
 
 const likeButtonBase = cn(

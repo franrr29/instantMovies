@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+
 import { MovieCard } from '../components/MovieCard';
 import { PosterFallback } from '../components/ui/PosterFallback';
 import { btnPrimary, eyebrowLabel, sectionHeading, tagOutline } from '../components/ui/styles';
@@ -9,11 +10,17 @@ import { getLikes } from '../services/likesService';
 import { getRecommendations, requestRecommendation } from '../services/recommendationsService';
 import type { Recommendation, RecommendationStatus } from '../types';
 
+
+
 const POLL_INTERVAL_MS = 3000;
+
+
 
 function hasPendingRecommendation(recommendations: Recommendation[] | undefined): boolean {
   return recommendations?.some((recommendation) => recommendation.status === 'PENDING') ?? false;
 }
+
+
 
 function StatusBadge({ status }: { status: RecommendationStatus }) {
   if (status === 'FAILED') {
@@ -24,6 +31,8 @@ function StatusBadge({ status }: { status: RecommendationStatus }) {
   }
   return <span className={tagOutline}>COMPLETED</span>;
 }
+
+
 
 export function Recommendations() {
   const queryClient = useQueryClient();

@@ -1,8 +1,11 @@
 import type { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+
 import { AUTH_COOKIE_NAME } from './authCookie';
 import { env } from './env';
 import type { HttpError } from './errorHandler';
+
+
 
 export interface AuthenticatedUser {
   id: number;
@@ -17,11 +20,15 @@ declare global {
   }
 }
 
+
+
 function unauthorized(message: string): HttpError {
   const error: HttpError = new Error(message);
   error.statusCode = 401;
   return error;
 }
+
+
 
 export function authenticate(req: Request, res: Response, next: NextFunction) {
   const token = req.cookies?.[AUTH_COOKIE_NAME];

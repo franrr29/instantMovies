@@ -1,11 +1,19 @@
 import { RecommendationStatus } from '../../generated/prisma/client';
 import { recommendationQueue } from '../../queue/recommendationQueue';
 import { getLikesByUser } from '../likes/likes.repository';
-import {createRecommendation,getRecommendationByIdForUser,getRecommendationsByUser,type RecommendationRecord,
+import {
+  createRecommendation,
+  getRecommendationByIdForUser,
+  getRecommendationsByUser,
+  type RecommendationRecord,
 } from './recommendations.repository';
 import { getMovieById } from '../../shared/tmdb';
 
+
+
 type RecommendationsErrorCode = 'NO_LIKES' | 'PENDING_ALREADY_EXISTS' | 'NOT_FOUND';
+
+
 
 // el controller decide el status http a partir de este code, el service no sabe de http
 export class RecommendationsServiceError extends Error {
@@ -17,6 +25,8 @@ export class RecommendationsServiceError extends Error {
     this.code = code;
   }
 }
+
+
 
 export interface EnrichedRecommendedMovie {
   tmdbMovieId: number;
@@ -34,6 +44,8 @@ export interface EnrichedRecommendation {
   createdAt: Date;
   movies: EnrichedRecommendedMovie[] | null;
 }
+
+
 
 async function enrichRecommendation(recommendation: RecommendationRecord): Promise<EnrichedRecommendation> {
   const movies = recommendation.movies
@@ -71,6 +83,8 @@ async function enrichRecommendation(recommendation: RecommendationRecord): Promi
     movies,
   };
 }
+
+
 
 export async function requestRecommendation(userId: number): Promise<RecommendationRecord> {
   const likes = await getLikesByUser(userId);
@@ -112,10 +126,14 @@ export async function requestRecommendation(userId: number): Promise<Recommendat
   return recommendation;
 }
 
+
+
 export async function getUserRecommendations(userId: number): Promise<EnrichedRecommendation[]> {
   const recommendations = await getRecommendationsByUser(userId);
   return Promise.all(recommendations.map(enrichRecommendation));
 }
+
+
 
 export async function getUserRecommendationById(
   id: number,

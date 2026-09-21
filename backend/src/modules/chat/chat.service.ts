@@ -1,4 +1,5 @@
 import type Groq from 'groq-sdk';
+
 import { ChatMessageRole } from '../../generated/prisma/client';
 import { checkMessageSafety } from '../../shared/guard';
 import { logger } from '../../shared/logger';
@@ -9,10 +10,14 @@ import { buildSystemPrompt } from './chat.prompt';
 import type { ChatMovieResult } from './chat.tools';
 import { asksForMovies, collectSeenMovieIds, compactToolResult } from './chat.utils';
 
+
+
 const HISTORY_LIMIT = 10;
 const BLOCKED_REPLY = 'Solo puedo ayudarte con peliculas y entretenimiento.';
 
 export type { ChatMovieResult };
+
+
 
 // sin la traza en el historial, el modelo deja de usar tools en los seguimientos ("recomendame otra")
 async function saveToolTrace(userId: number, trace: Groq.Chat.ChatCompletionMessageParam[]): Promise<void> {
@@ -27,6 +32,8 @@ async function saveToolTrace(userId: number, trace: Groq.Chat.ChatCompletionMess
     }
   }
 }
+
+
 
 export async function handleChatMessage(
   userId: number,

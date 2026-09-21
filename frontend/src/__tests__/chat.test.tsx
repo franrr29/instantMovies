@@ -3,13 +3,19 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+
+
 vi.mock('../services/chatService', () => ({
   sendMessage: vi.fn(),
 }));
 
+
+
 import { sendMessage } from '../services/chatService';
 import { Chat } from '../pages/Chat';
 import type { ChatMovieResult } from '../types';
+
+
 
 function fakeMovie(tmdbId: number, title: string): ChatMovieResult {
   return {
@@ -21,6 +27,8 @@ function fakeMovie(tmdbId: number, title: string): ChatMovieResult {
   };
 }
 
+
+
 function createDeferred<T>() {
   let resolve!: (value: T) => void;
   const promise = new Promise<T>((res) => {
@@ -29,6 +37,8 @@ function createDeferred<T>() {
   return { promise, resolve };
 }
 
+
+
 async function sendChatMessage(user: ReturnType<typeof userEvent.setup>, text: string) {
   await user.click(screen.getByRole('button', { name: 'Abrir chat' }));
 
@@ -36,6 +46,8 @@ async function sendChatMessage(user: ReturnType<typeof userEvent.setup>, text: s
   await user.type(input, text);
   await user.click(screen.getByRole('button', { name: 'Enviar' }));
 }
+
+
 
 describe('Chat', () => {
   beforeEach(() => {

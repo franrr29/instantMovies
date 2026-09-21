@@ -1,6 +1,9 @@
 import { z } from 'zod';
+
 import { ChatMessageRole } from '../../generated/prisma/client';
 import type { ChatMessageRecord } from './chat.repository';
+
+
 
 // las raices aceptan sufijo (recomendame, buscame); el resto es palabra completa con plural opcional.
 // "dame" solo cuenta en "dame mas" / "dame algo" para no matchear "dame un momento"
@@ -20,6 +23,8 @@ const toolMoviesResultSchema = z.union([z.array(toolMovieSchema), toolMovieSchem
 
 const compactMoviesSchema = z.array(z.object({ tmdbId: z.number() }));
 
+
+
 export function asksForMovies(message: string): boolean {
   const normalized = message
     .toLowerCase()
@@ -28,6 +33,8 @@ export function asksForMovies(message: string): boolean {
 
   return MOVIE_REQUEST_REGEX.test(normalized);
 }
+
+
 
 export function collectSeenMovieIds(history: ChatMessageRecord[]): number[] {
   return history
@@ -41,6 +48,8 @@ export function collectSeenMovieIds(history: ChatMessageRecord[]): number[] {
       }
     });
 }
+
+
 
 // los turnos anteriores solo necesitan id y titulo (el resto son tokens de mas); lo que no sea
 // una pelicula o lista de peliculas (ej. { error }) queda tal cual

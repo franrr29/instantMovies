@@ -1,6 +1,7 @@
-import { RecommendationStatus } from '../../generated/prisma/client';
-import type { Prisma } from '../../generated/prisma/client';
+import { RecommendationStatus, type Prisma } from '../../generated/prisma/client';
 import { prisma } from '../../shared/db';
+
+
 
 export interface RecommendedMovie {
   tmdbMovieId: number;
@@ -15,15 +16,18 @@ export interface RecommendationRecord {
   createdAt: Date;
 }
 
+
+
 export async function createRecommendation(userId: number): Promise<RecommendationRecord> {
   return prisma.recommendation.create({
     data: {
       userId,
       status: RecommendationStatus.PENDING,
-      movies: undefined,
     },
   }) as Promise<RecommendationRecord>;
 }
+
+
 
 export async function completeRecommendation(
   id: number,
@@ -35,6 +39,8 @@ export async function completeRecommendation(
   }) as Promise<RecommendationRecord>;
 }
 
+
+
 export async function failRecommendation(id: number): Promise<RecommendationRecord> {
   return prisma.recommendation.update({
     where: { id },
@@ -42,12 +48,16 @@ export async function failRecommendation(id: number): Promise<RecommendationReco
   }) as Promise<RecommendationRecord>;
 }
 
+
+
 export async function getRecommendationsByUser(userId: number): Promise<RecommendationRecord[]> {
   return prisma.recommendation.findMany({
     where: { userId },
     orderBy: { createdAt: 'desc' },
   }) as Promise<RecommendationRecord[]>;
 }
+
+
 
 export async function getRecommendationByIdForUser(
   id: number,

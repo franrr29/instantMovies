@@ -8,7 +8,11 @@ import {
   type LikeRecord,
 } from './likes.repository';
 
+
+
 type LikesErrorCode = 'ALREADY_LIKED' | 'LIKE_NOT_FOUND';
+
+
 
 // el controller decide el status http a partir de este code, el service no sabe de http
 export class LikesServiceError extends Error {
@@ -21,6 +25,8 @@ export class LikesServiceError extends Error {
   }
 }
 
+
+
 export interface EnrichedLike {
   tmdbMovieId: number;
   title: string;
@@ -29,6 +35,8 @@ export interface EnrichedLike {
   voteAverage: number;
   createdAt: Date;
 }
+
+
 
 // mismo patron de resiliencia que enrichRecommendation en recommendations.service.ts:
 // si TMDB falla para una pelicula, se devuelven datos minimos en vez de romper el enriquecimiento
@@ -55,6 +63,8 @@ async function enrichLike(like: LikeRecord): Promise<EnrichedLike> {
   }
 }
 
+
+
 export async function addLike(userId: number, tmdbMovieId: number): Promise<LikeRecord> {
   try {
     return await addLikeToDb(userId, tmdbMovieId);
@@ -66,6 +76,8 @@ export async function addLike(userId: number, tmdbMovieId: number): Promise<Like
   }
 }
 
+
+
 export async function removeLike(userId: number, tmdbMovieId: number): Promise<void> {
   try {
     await removeLikeFromDb(userId, tmdbMovieId);
@@ -76,6 +88,8 @@ export async function removeLike(userId: number, tmdbMovieId: number): Promise<v
     throw err;
   }
 }
+
+
 
 export async function getUserLikes(userId: number): Promise<EnrichedLike[]> {
   const likes = await getLikesByUser(userId);

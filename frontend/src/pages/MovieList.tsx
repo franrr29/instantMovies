@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+
 import { MovieCard } from '../components/MovieCard';
 import { LikeIcon } from '../components/ui/LikeIcon';
 import { btnSecondary, inputClasses, likeButtonIdle, likeButtonLiked, sectionHeading } from '../components/ui/styles';
@@ -9,13 +10,19 @@ import { addLike, getLikes, removeLike } from '../services/likesService';
 import { getTrendingMovies, searchMovies } from '../services/moviesService';
 import type { Movie } from '../types';
 
+
+
 const DEBOUNCE_MS = 400;
 const PAGE_SIZE = 12;
+
+
 
 interface ToggleLikeVariables {
   movie: Movie;
   isLiked: boolean;
 }
+
+
 
 export function MovieList() {
   const [searchInput, setSearchInput] = useState('');

@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+
+
 vi.mock('../services/api', () => ({
   AUTH_LOGOUT_EVENT: 'auth:logout',
   api: {
@@ -12,8 +14,12 @@ vi.mock('../services/api', () => ({
   },
 }));
 
+
+
 import { api } from '../services/api';
 import { AuthProvider, useAuth } from '../context/AuthContext';
+
+
 
 function AuthConsumer() {
   const { user, isLoading, login, logout } = useAuth();
@@ -31,6 +37,8 @@ function AuthConsumer() {
   );
 }
 
+
+
 function renderAuthConsumer() {
   return render(
     <MemoryRouter>
@@ -40,6 +48,8 @@ function renderAuthConsumer() {
     </MemoryRouter>,
   );
 }
+
+
 
 describe('AuthContext', () => {
   beforeEach(() => {

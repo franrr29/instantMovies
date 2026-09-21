@@ -1,6 +1,8 @@
 import type { ChatMessageRole, Prisma } from '../../generated/prisma/client';
 import { prisma } from '../../shared/db';
 
+
+
 export interface ChatMessageRecord {
   id: number;
   userId: number;
@@ -16,6 +18,8 @@ export interface SaveMessageTrace {
   toolCalls?: unknown;
   toolCallId?: string;
 }
+
+
 
 export async function saveMessage(
   userId: number,
@@ -34,6 +38,8 @@ export async function saveMessage(
   });
 }
 
+
+
 export async function getMessagesByUser(
   userId: number,
   limit = 20,
@@ -46,8 +52,4 @@ export async function getMessagesByUser(
   });
 
   return messages.reverse();
-}
-
-export async function clearChat(userId: number): Promise<void> {
-  await prisma.chatMessage.deleteMany({ where: { userId } });
 }

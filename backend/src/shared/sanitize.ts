@@ -19,15 +19,20 @@ const PROMPT_INJECTION_PATTERNS: RegExp[] = [
   /olvida\s+(todas?\s+)?(las\s+)?instrucciones/i,
 ];
 
+
+
 export interface SanitizeResult {
   clean: string;
   blocked: boolean;
 }
 
+
+
 // normaliza solo para testear los regex contra variantes de unicode/espaciado; nunca se devuelve
 function normalizeForDetection(input: string): string {
   return input.normalize('NFKC').replace(MULTIPLE_SPACES_REGEX, ' ').trim();
 }
+
 
 
 // sanitiza el mensaje de chat eliminando etiquetas HTML y detectando posibles intentos de prompt injection

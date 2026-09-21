@@ -4,9 +4,10 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+
+
 vi.mock('../services/recommendationsService', () => ({
   getRecommendations: vi.fn(),
-  getRecommendationById: vi.fn(),
   requestRecommendation: vi.fn(),
 }));
 
@@ -16,10 +17,14 @@ vi.mock('../services/likesService', () => ({
   removeLike: vi.fn(),
 }));
 
+
+
 import { getLikes } from '../services/likesService';
 import { getRecommendations } from '../services/recommendationsService';
 import { Recommendations } from '../pages/Recommendations';
 import type { Like, Recommendation } from '../types';
+
+
 
 function fakeLike(tmdbMovieId: number): Like {
   return {
@@ -31,6 +36,8 @@ function fakeLike(tmdbMovieId: number): Like {
     createdAt: new Date().toISOString(),
   };
 }
+
+
 
 function renderRecommendations() {
   const queryClient = new QueryClient({
@@ -45,6 +52,8 @@ function renderRecommendations() {
     </QueryClientProvider>,
   );
 }
+
+
 
 describe('Recommendations', () => {
   beforeEach(() => {

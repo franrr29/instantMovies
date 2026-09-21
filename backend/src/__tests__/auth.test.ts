@@ -1,6 +1,9 @@
 // tests unitarios de auth.schemas: validacion email, password complejo, normalizacion lowercase
 import { describe, expect, it } from 'vitest';
+
 import { loginSchema, registerSchema } from '../modules/auth/auth.schemas';
+
+
 
 describe('auth.schemas', () => {
   describe('validacion de username', () => {

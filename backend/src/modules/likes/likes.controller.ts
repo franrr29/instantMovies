@@ -1,13 +1,19 @@
 import type { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
+
 import { numericId } from '../../shared/validators';
 import { addLikeSchema } from './likes.schemas';
-import {LikesServiceError,addLike as addLikeService,getUserLikes as getUserLikesService,removeLike as removeLikeService,
+import {
+  LikesServiceError,
+  addLike as addLikeService,
+  getUserLikes as getUserLikesService,
+  removeLike as removeLikeService,
 } from './likes.service';
+
+
 
 export async function addLike(req: Request, res: Response, next: NextFunction) {
   try {
-
     const { tmdbMovieId } = addLikeSchema.parse(req.body);
     const userId = req.user!.id;
 
@@ -16,7 +22,6 @@ export async function addLike(req: Request, res: Response, next: NextFunction) {
     res.status(201).json(like);
 
   } catch (err) {
-
     if (err instanceof z.ZodError) {
       res.status(400).json({ error: 'datos invalidos', details: err.flatten() });
       return;
@@ -31,9 +36,10 @@ export async function addLike(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+
+
 export async function removeLike(req: Request, res: Response, next: NextFunction) {
   try {
-
     const tmdbMovieId = numericId.parse(req.params.tmdbId);
     const userId = req.user!.id;
 
@@ -41,7 +47,6 @@ export async function removeLike(req: Request, res: Response, next: NextFunction
     res.status(204).send();
 
   } catch (err) {
-
     if (err instanceof z.ZodError) {
       res.status(400).json({ error: 'datos invalidos', details: err.flatten() });
       return;
@@ -58,8 +63,8 @@ export async function removeLike(req: Request, res: Response, next: NextFunction
 }
 
 
-export async function getUserLikes(req: Request, res: Response, next: NextFunction) {
 
+export async function getUserLikes(req: Request, res: Response, next: NextFunction) {
   try {
     const userId = req.user!.id;
 
@@ -67,7 +72,6 @@ export async function getUserLikes(req: Request, res: Response, next: NextFuncti
     res.status(200).json(likes);
 
   } catch (err) {
-    
     next(err);
   }
 }

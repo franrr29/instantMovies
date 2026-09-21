@@ -1,5 +1,8 @@
 import pino from 'pino';
+
 import { getRequestId } from './requestContext';
+
+
 
 //observabilidad: logger centralizado para la aplicación y tener logs consistentes en toda la app
 export const logger = pino({

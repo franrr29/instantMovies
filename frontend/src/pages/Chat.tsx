@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+
 import { btnPrimary, btnSecondary, inputClasses } from '../components/ui/styles';
 import { TypingDots } from '../components/ui/TypingDots';
 import { cn } from '../lib/cn';
 import { sendMessage } from '../services/chatService';
 import type { ChatMessage, ChatMovieResult } from '../types';
 
+
+
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w92';
+
+
 
 function ChatMoviePreview({ movie }: { movie: ChatMovieResult }) {
   return (
@@ -26,6 +31,8 @@ function ChatMoviePreview({ movie }: { movie: ChatMovieResult }) {
     </div>
   );
 }
+
+
 
 function ChatBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === 'user';
@@ -51,6 +58,8 @@ function ChatBubble({ message }: { message: ChatMessage }) {
     </div>
   );
 }
+
+
 
 export function Chat() {
   const [isOpen, setIsOpen] = useState(false);

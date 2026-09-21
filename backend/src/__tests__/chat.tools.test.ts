@@ -2,6 +2,8 @@
 import type Groq from 'groq-sdk';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+
+
 vi.mock('../shared/tmdb', () => ({
   discoverMovies: vi.fn(),
   searchMovies: vi.fn(),
@@ -11,8 +13,12 @@ vi.mock('../shared/logger', () => ({
   logger: { warn: vi.fn() },
 }));
 
+
+
 import { executeTool } from '../modules/chat/chat.tools';
 import { discoverMovies, searchMovies } from '../shared/tmdb';
+
+
 
 const makeMovie = (id: number) => ({
   id,
@@ -23,13 +29,19 @@ const makeMovie = (id: number) => ({
   vote_average: 7,
 });
 
+
+
 const makeToolCall = (name: string, args: object): Groq.Chat.ChatCompletionMessageToolCall => ({
   id: 'call_1',
   type: 'function',
   function: { name, arguments: JSON.stringify(args) },
 });
 
+
+
 const resultIds = (content: string) => (JSON.parse(content) as { id: number }[]).map((movie) => movie.id);
+
+
 
 describe('chat.tools executeTool discover_movies', () => {
   beforeEach(() => {

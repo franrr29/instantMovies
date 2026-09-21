@@ -1,23 +1,22 @@
 import type { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
+
 import { clearAuthCookie, setAuthCookie } from '../../shared/authCookie';
 import { loginSchema, registerSchema } from './auth.schemas';
 import { AuthServiceError, loginUser, registerUser } from './auth.service';
 
+
+
 //registrar usuario:
 export async function register(req: Request, res: Response, next: NextFunction) {
-
   try {
-
     const { username, password } = registerSchema.parse(req.body);
     const { user, token } = await registerUser(username, password);
 
     setAuthCookie(res, token);
     res.status(201).json({ user });
 
-
   } catch (err) {
-
     if (err instanceof z.ZodError) {
       res.status(400).json({ error: 'datos invalidos', details: err.flatten() });
       return;
@@ -33,11 +32,10 @@ export async function register(req: Request, res: Response, next: NextFunction) 
 }
 
 
+
 //logear usuario:
 export async function login(req: Request, res: Response, next: NextFunction) {
-
   try {
-
     const { username, password } = loginSchema.parse(req.body);
     const { user, token } = await loginUser(username, password);
 
@@ -45,7 +43,6 @@ export async function login(req: Request, res: Response, next: NextFunction) {
     res.status(200).json({ user });
 
   } catch (err) {
-
     if (err instanceof z.ZodError) {
       res.status(400).json({ error: 'datos invalidos', details: err.flatten() });
       return;
@@ -61,11 +58,15 @@ export async function login(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+
+
 //cerrar sesion, limpia la cookie de auth:
 export async function logout(req: Request, res: Response) {
   clearAuthCookie(res);
   res.status(200).json({ message: 'Logged out' });
 }
+
+
 
 //sesion actual, para que el frontend la restaure al recargar:
 export async function me(req: Request, res: Response) {

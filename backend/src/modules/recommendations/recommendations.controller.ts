@@ -1,12 +1,18 @@
 import type { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
+
 import { numericId } from '../../shared/validators';
-import { RecommendationsServiceError, getUserRecommendationById as getUserRecommendationByIdService, getUserRecommendations as getUserRecommendationsService, requestRecommendation as requestRecommendationService,
+import {
+  RecommendationsServiceError,
+  getUserRecommendationById as getUserRecommendationByIdService,
+  getUserRecommendations as getUserRecommendationsService,
+  requestRecommendation as requestRecommendationService,
 } from './recommendations.service';
+
+
 
 export async function requestRecommendation(req: Request, res: Response, next: NextFunction) {
   try {
-
     const userId = req.user!.id;
 
     const recommendation = await requestRecommendationService(userId);
@@ -14,12 +20,10 @@ export async function requestRecommendation(req: Request, res: Response, next: N
     res.status(202).json(recommendation);
 
   } catch (err) {
-
     if (err instanceof RecommendationsServiceError && err.code === 'NO_LIKES') {
       res.status(400).json({ error: err.message });
       return;
     }
-
 
     if (err instanceof RecommendationsServiceError && err.code === 'PENDING_ALREADY_EXISTS') {
       res.status(409).json({ error: err.message });
@@ -30,8 +34,9 @@ export async function requestRecommendation(req: Request, res: Response, next: N
   }
 }
 
-export async function getUserRecommendations(req: Request, res: Response, next: NextFunction) {
 
+
+export async function getUserRecommendations(req: Request, res: Response, next: NextFunction) {
   try {
     const userId = req.user!.id;
 
@@ -43,6 +48,8 @@ export async function getUserRecommendations(req: Request, res: Response, next: 
   }
 }
 
+
+
 export async function getUserRecommendationById(req: Request, res: Response, next: NextFunction) {
   try {
     const userId = req.user!.id;
@@ -52,7 +59,6 @@ export async function getUserRecommendationById(req: Request, res: Response, nex
     res.status(200).json(recommendation);
 
   } catch (err) {
-
     if (err instanceof z.ZodError) {
       res.status(400).json({ error: 'datos invalidos', details: err.flatten() });
       return;

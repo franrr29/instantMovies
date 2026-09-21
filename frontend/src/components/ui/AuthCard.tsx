@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
+
 import { panel } from './styles';
 import { cn } from '../../lib/cn';
+
+
 
 interface AuthCardProps {
   tag: string;
@@ -9,6 +12,8 @@ interface AuthCardProps {
   children: ReactNode;
   footer: ReactNode;
 }
+
+
 
 export function AuthCard({ tag, title, subtitle, children, footer }: AuthCardProps) {
   return (

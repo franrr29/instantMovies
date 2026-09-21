@@ -1,6 +1,8 @@
 // tests unitarios de generateRecommendation: resolucion de titulos a IDs reales de TMDB
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+
+
 const { createMock } = vi.hoisted(() => ({ createMock: vi.fn() }));
 
 vi.mock('groq-sdk', () => ({
@@ -13,18 +15,28 @@ vi.mock('../shared/tmdb', () => ({
   searchMovies: vi.fn(),
 }));
 
+
+
 import { generateRecommendation } from '../shared/groq';
 import { searchMovies } from '../shared/tmdb';
 
+
+
 const likedMovies = [{ id: 27205, title: 'Inception', genres: ['Accion'] }];
+
+
 
 function groqReplies(movies: { title: string; reason: string }[]) {
   createMock.mockResolvedValue({ choices: [{ message: { content: JSON.stringify({ movies }) } }] });
 }
 
+
+
 function tmdbResult(id: number) {
   return [{ id, title: `Pelicula ${id}`, overview: '', release_date: '', poster_path: null, vote_average: 0 }];
 }
+
+
 
 const threeMovies = [
   { title: 'A', reason: 'razon a' },

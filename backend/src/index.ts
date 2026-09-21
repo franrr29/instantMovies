@@ -4,9 +4,13 @@ import { env } from './shared/env';
 import { logger } from './shared/logger';
 import { recommendationQueue, redisConnection } from './queue/recommendationQueue';
 
+
+
 const server = app.listen(env.PORT, () => {
   logger.info(`server arrancado en el puerto ${env.PORT}`);
 });
+
+
 
 async function shutdown(signal: string) {
   logger.info({ signal }, 'señal recibida, iniciando apagado prolijo');
@@ -39,6 +43,7 @@ async function shutdown(signal: string) {
     process.exit(1);
   }
 }
+
 
 
 //escucha el proceso y comienza a ejecutar el shutdown:

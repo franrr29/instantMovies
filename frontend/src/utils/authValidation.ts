@@ -1,5 +1,7 @@
 import { isAxiosError } from 'axios';
 
+
+
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // misma regla que backend/src/modules/auth/auth.schemas.ts (PASSWORD_REGEX)
@@ -8,16 +10,22 @@ const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{
 export const PASSWORD_WEAK_MESSAGE =
   'La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial';
 
+
+
 export function validateUsername(value: string): string | null {
   if (!value.trim()) return 'El username es obligatorio';
   if (!EMAIL_REGEX.test(value.trim())) return 'El username debe ser un email válido';
   return null;
 }
 
+
+
 export function validatePasswordRequired(value: string): string | null {
   if (!value) return 'La contraseña es obligatoria';
   return null;
 }
+
+
 
 export function validatePasswordComplexity(value: string): string | null {
   const requiredError = validatePasswordRequired(value);
@@ -26,7 +34,11 @@ export function validatePasswordComplexity(value: string): string | null {
   return null;
 }
 
+
+
 type AuthErrorKind = 'login' | 'register';
+
+
 
 function extractFieldErrorMessage(data: unknown): string | null {
   if (!data || typeof data !== 'object') return null;
@@ -38,6 +50,8 @@ function extractFieldErrorMessage(data: unknown): string | null {
   const firstMessage = Object.values(fieldErrors).flat()[0];
   return firstMessage ?? null;
 }
+
+
 
 export function getAuthErrorMessage(error: unknown, kind: AuthErrorKind): string {
   if (isAxiosError(error)) {

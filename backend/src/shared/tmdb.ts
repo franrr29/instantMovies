@@ -1,6 +1,9 @@
 import { z } from 'zod';
+
 import { env } from './env';
 import { logger } from './logger';
+
+
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_TIMEOUT_MS = 5000;
@@ -34,12 +37,18 @@ const tmdbMovieDetailsSchema = tmdbMovieSchema.extend({
   genres: z.array(tmdbGenreSchema),
 });
 
+
+
 export type TmdbMovie = z.infer<typeof tmdbMovieSchema>;
 export type TmdbMovieDetails = z.infer<typeof tmdbMovieDetailsSchema>;
+
+
 
 function getApiKey(): string {
   return env.TMDB_API_KEY;
 }
+
+
 
 async function fetchFromTmdb(path: string, params: Record<string, string>): Promise<TmdbMovie[]> {
   const url = new URL(`${TMDB_BASE_URL}${path}`);
@@ -59,15 +68,21 @@ async function fetchFromTmdb(path: string, params: Record<string, string>): Prom
   return tmdbPaginatedResponseSchema.parse(body).results;
 }
 
+
+
 //si no paso url, se obtiene la primera página de películas populares por defecto
 export async function getPopularMovies(page = 1): Promise<TmdbMovie[]> {
   return fetchFromTmdb('/movie/popular', { page: String(page) });
 }
 
+
+
 // le dice a fetch que busque películas que coincidan con el query proporcionado
 export async function searchMovies(query: string, page = 1): Promise<TmdbMovie[]> {
   return fetchFromTmdb('/search/movie', { query, page: String(page) });
 }
+
+
 
 // peliculas en tendencia de la semana; es el catalogo inicial cuando el usuario
 // todavia no escribio ninguna busqueda
@@ -75,11 +90,15 @@ export async function getTrendingMovies(page = 1): Promise<TmdbMovie[]> {
   return fetchFromTmdb('/trending/movie/week', { page: String(page) });
 }
 
+
+
 export interface DiscoverMoviesFilters {
   genreIds?: number[];
   primaryReleaseYear?: number;
   minRating?: number;
 }
+
+
 
 // busqueda por filtros (genero, año, rating minimo) en vez de por titulo,
 // usada por la tool discover_movies del chat
@@ -101,9 +120,13 @@ export async function discoverMovies(filters: DiscoverMoviesFilters, page = 1): 
   return fetchFromTmdb('/discover/movie', params);
 }
 
+
+
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+
 
 // reintenta solo fallos de red/timeout (fetch lanza); los status http no-ok se manejan aguas abajo
 async function fetchMovieWithRetry(url: URL, tmdbMovieId: number): Promise<Response> {
@@ -121,6 +144,8 @@ async function fetchMovieWithRetry(url: URL, tmdbMovieId: number): Promise<Respo
     }
   }
 }
+
+
 
 export async function getMovieById(tmdbMovieId: number): Promise<TmdbMovieDetails> {
   const url = new URL(`${TMDB_BASE_URL}/movie/${tmdbMovieId}`);

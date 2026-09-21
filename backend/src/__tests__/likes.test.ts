@@ -1,6 +1,8 @@
 // tests unitarios de likes.service: like duplicado, like no encontrado, enriquecimiento parcial TMDB
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+
+
 vi.mock('../modules/likes/likes.repository', () => ({
   ALREADY_LIKED_MESSAGE: 'pelicula ya marcada como me gusta',
   LIKE_NOT_FOUND_MESSAGE: 'like no encontrado',
@@ -13,6 +15,8 @@ vi.mock('../shared/tmdb', () => ({
   getMovieById: vi.fn(),
 }));
 
+
+
 import {
   ALREADY_LIKED_MESSAGE,
   LIKE_NOT_FOUND_MESSAGE,
@@ -22,6 +26,8 @@ import {
 } from '../modules/likes/likes.repository';
 import { getMovieById } from '../shared/tmdb';
 import { LikesServiceError, addLike, getUserLikes, removeLike } from '../modules/likes/likes.service';
+
+
 
 function fakeTmdbMovie(tmdbMovieId: number) {
   return {
@@ -34,6 +40,8 @@ function fakeTmdbMovie(tmdbMovieId: number) {
     genres: [],
   };
 }
+
+
 
 describe('likes.service', () => {
   beforeEach(() => {

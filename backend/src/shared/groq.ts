@@ -1,8 +1,11 @@
 import Groq from 'groq-sdk';
 import { z } from 'zod';
+
 import { env } from './env';
 import { logger } from './logger';
 import { searchMovies } from './tmdb';
+
+
 
 // groq solo devuelve titulo y razon: los LLMs no conocen los IDs de TMDB y los
 // inventan, asi que el ID real se resuelve despues buscando el titulo en TMDB
@@ -20,8 +23,6 @@ export const groqRecommendationSchema = z
   })
   .transform((data) => data.movies);
 
-export type GroqRecommendation = z.infer<typeof groqRecommendationSchema>;
-
 export const groq = new Groq({
   apiKey: env.GROQ_API_KEY,
   baseURL: 'https://groq.helicone.ai',
@@ -29,6 +30,8 @@ export const groq = new Groq({
     'Helicone-Auth': `Bearer ${env.HELICONE_API_KEY}`,
   },
 });
+
+
 
 function buildPrompt(likedMovies: { id: number; title: string; genres: string[] }[]): string {
   const likedList = likedMovies
@@ -47,11 +50,15 @@ function buildPrompt(likedMovies: { id: number; title: string; genres: string[] 
   ].join('\n');
 }
 
+
+
 export interface ResolvedRecommendation {
   title: string;
   tmdbMovieId: number;
   reason: string;
 }
+
+
 
 export async function generateRecommendation(
   likedMovies: { id: number; title: string; genres: string[] }[],

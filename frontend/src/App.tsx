@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
@@ -10,7 +11,11 @@ import { MovieList } from './pages/MovieList';
 import { Recommendations } from './pages/Recommendations';
 import { Register } from './pages/Register';
 
+
+
 const queryClient = new QueryClient();
+
+
 
 function App() {
   return (
@@ -35,5 +40,7 @@ function App() {
     </QueryClientProvider>
   );
 }
+
+
 
 export default App;

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
+
 import { AuthCard } from '../components/ui/AuthCard';
 import { FormField } from '../components/ui/FormField';
 import { btnPrimary } from '../components/ui/styles';
@@ -7,10 +8,14 @@ import { useAuth } from '../context/AuthContext';
 import { cn } from '../lib/cn';
 import { getAuthErrorMessage, validatePasswordRequired, validateUsername } from '../utils/authValidation';
 
+
+
 interface FieldErrors {
   username?: string;
   password?: string;
 }
+
+
 
 export function Login() {
   const { user, isLoading: isAuthLoading, login } = useAuth();

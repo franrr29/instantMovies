@@ -1,5 +1,8 @@
 import type { CookieOptions, Response } from 'express';
+
 import { env } from './env';
+
+
 
 export const AUTH_COOKIE_NAME = 'token';
 
@@ -14,12 +17,16 @@ const baseCookieOptions: CookieOptions = {
   path: '/',
 };
 
+
+
 export function setAuthCookie(res: Response, token: string): void {
   res.cookie(AUTH_COOKIE_NAME, token, {
     ...baseCookieOptions,
     maxAge: AUTH_COOKIE_MAX_AGE_MS,
   });
 }
+
+
 
 export function clearAuthCookie(res: Response): void {
   res.clearCookie(AUTH_COOKIE_NAME, baseCookieOptions);

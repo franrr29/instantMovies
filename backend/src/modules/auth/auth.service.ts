@@ -1,7 +1,10 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+
 import { env } from '../../shared/env';
 import { createUser, findUserByUsername } from './auth.repository';
+
+
 
 const SALT_ROUNDS = 10;
 const JWT_EXPIRES_IN = '24h';
@@ -10,7 +13,11 @@ const JWT_EXPIRES_IN = '24h';
 // cuando el usuario no existe y asi el login tarda lo mismo en ambos casos
 const DUMMY_PASSWORD_HASH = bcrypt.hashSync('dummy-password-para-timing', SALT_ROUNDS);
 
+
+
 type AuthErrorCode = 'USERNAME_TAKEN' | 'INVALID_CREDENTIALS';
+
+
 
 // el controller decide el status http a partir de este code, el service no sabe de http
 export class AuthServiceError extends Error {
@@ -23,6 +30,8 @@ export class AuthServiceError extends Error {
   }
 }
 
+
+
 export interface PublicUser {
   id: number;
   username: string;
@@ -33,6 +42,7 @@ export interface AuthResult {
   user: PublicUser;
   token: string;
 }
+
 
 
 export async function registerUser(username: string, password: string): Promise<AuthResult> {
@@ -50,6 +60,8 @@ export async function registerUser(username: string, password: string): Promise<
   return { user: { id: user.id, username: user.username, createdAt: user.createdAt }, token };
 }
 
+
+
 export async function loginUser(username: string, password: string): Promise<AuthResult> {
 
   const user = await findUserByUsername(username);
@@ -65,6 +77,8 @@ export async function loginUser(username: string, password: string): Promise<Aut
   const token = signToken(user.id, user.username);
   return { user: { id: user.id, username: user.username, createdAt: user.createdAt }, token };
 }
+
+
 
 function signToken(userId: number, username: string): string {
   return jwt.sign({ sub: userId, username }, env.JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });

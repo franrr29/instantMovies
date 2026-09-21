@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+
+
 // para params de ruta como :id y :tmdbId
 export const numericId = z.coerce.number().int().positive();
 

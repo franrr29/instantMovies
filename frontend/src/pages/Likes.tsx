@@ -1,11 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+
 import { MovieCard } from '../components/MovieCard';
 import { LikeIcon } from '../components/ui/LikeIcon';
 import { PosterFallback } from '../components/ui/PosterFallback';
 import { btnSecondary, likeButtonLiked, sectionHeading } from '../components/ui/styles';
 import { cn } from '../lib/cn';
 import { getLikes, removeLike } from '../services/likesService';
+
+
 
 export function Likes() {
   const queryClient = useQueryClient();
@@ -79,7 +82,6 @@ export function Likes() {
                 <div className="aspect-[2/3] bg-surface">
                   <PosterFallback>Sin poster</PosterFallback>
                 </div>
-                <p className="text-xs text-ink/60">tmdbMovieId: {like.tmdbMovieId}</p>
                 {removeButton}
               </div>
             );

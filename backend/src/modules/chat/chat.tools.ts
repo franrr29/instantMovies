@@ -1,8 +1,13 @@
 import type Groq from 'groq-sdk';
+
 import { logger } from '../../shared/logger';
 import { type TmdbMovie, discoverMovies, searchMovies } from '../../shared/tmdb';
 
+
+
 const DISCOVER_MAX_PAGES = 3;
+
+
 
 // si tmdb falla, el modelo recibe un resultado de error en vez de que se rompa el chat
 function toolFailedResult(err: unknown, toolName: string): string {
@@ -13,6 +18,8 @@ function toolFailedResult(err: unknown, toolName: string): string {
   return JSON.stringify({ error: 'no se pudo buscar en tmdb en este momento' });
 }
 
+
+
 export interface ChatMovieResult {
   tmdbId: number;
   title: string;
@@ -20,6 +27,8 @@ export interface ChatMovieResult {
   rating: number;
   overview: string;
 }
+
+
 
 export const searchMovieTool: Groq.Chat.ChatCompletionTool = {
   type: 'function',
@@ -63,6 +72,8 @@ export const discoverMovieTool: Groq.Chat.ChatCompletionTool = {
     },
   },
 };
+
+
 
 export async function executeTool(
   toolCall: Groq.Chat.ChatCompletionMessageToolCall,

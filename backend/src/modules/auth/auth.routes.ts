@@ -1,6 +1,9 @@
 import { Router } from 'express';
+
 import { authenticate } from '../../shared/authenticate';
 import { login, logout, me, register } from './auth.controller';
+
+
 
 export const authRouter = Router();
 

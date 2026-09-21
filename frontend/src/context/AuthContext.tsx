@@ -1,8 +1,11 @@
 import type { AxiosRequestConfig } from 'axios';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import { AUTH_LOGOUT_EVENT, api } from '../services/api';
 import type { User } from '../types';
+
+
 
 interface AuthContextValue {
   user: User | null;
@@ -12,7 +15,11 @@ interface AuthContextValue {
   logout: () => Promise<void>;
 }
 
+
+
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -75,6 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     </AuthContext.Provider>
   );
 }
+
+
 
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);

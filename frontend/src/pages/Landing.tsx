@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom';
+
 import { Eyebrow } from '../components/ui/Eyebrow';
 import { btnPrimary, btnSecondary, sectionHeading } from '../components/ui/styles';
 import { TypingDots } from '../components/ui/TypingDots';
 import { cn } from '../lib/cn';
+
+
 
 const NAV_LINKS = [
   { href: '#how', label: 'How it works' },
@@ -100,6 +103,8 @@ const marqueeItems = [
   'No streaming, only signal',
 ];
 
+
+
 function Logo() {
   return (
     <div className="flex items-center gap-2.5 font-display text-xl font-semibold tracking-tight">
@@ -109,12 +114,16 @@ function Logo() {
   );
 }
 
+
+
 interface PosterPlaceholderProps {
   title: string;
   meta: string;
   gradient: string;
   posterPath: string;
 }
+
+
 
 function PosterPlaceholder({ title, meta, gradient, posterPath }: PosterPlaceholderProps) {
   return (
@@ -132,6 +141,8 @@ function PosterPlaceholder({ title, meta, gradient, posterPath }: PosterPlacehol
     </div>
   );
 }
+
+
 
 export function Landing() {
   return (

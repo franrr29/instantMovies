@@ -1,9 +1,14 @@
 import type { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
+
 import { paginationQuery } from '../../shared/validators';
 import { listMovies, listTrendingMovies } from './movies.service';
 
+
+
 const moviesQuery = paginationQuery.extend({ query: z.string().optional() });
+
+
 
 export async function getMovies(req: Request, res: Response, next: NextFunction) {
   try {
@@ -20,6 +25,8 @@ export async function getMovies(req: Request, res: Response, next: NextFunction)
     next(err);
   }
 }
+
+
 
 export async function getTrendingMovies(req: Request, res: Response, next: NextFunction) {
   try {

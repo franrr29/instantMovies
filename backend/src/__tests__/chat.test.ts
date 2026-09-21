@@ -1,6 +1,9 @@
 // tests unitarios del modulo chat: chat.service (mensaje bloqueado por sanitizacion o por guard) y chat.utils
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { ChatMessageRole } from '../generated/prisma/client';
+
+
 
 vi.mock('../shared/sanitize', () => ({
   sanitizeMessage: vi.fn(),
@@ -19,12 +22,16 @@ vi.mock('../shared/groq', () => ({
   groq: { chat: { completions: { create: vi.fn() } } },
 }));
 
+
+
 import { groq } from '../shared/groq';
 import { checkMessageSafety } from '../shared/guard';
 import { saveMessage } from '../modules/chat/chat.repository';
 import { sanitizeMessage } from '../shared/sanitize';
 import { handleChatMessage } from '../modules/chat/chat.service';
 import { asksForMovies, collectSeenMovieIds, compactToolResult } from '../modules/chat/chat.utils';
+
+
 
 const BLOCKED_REPLY = 'Solo puedo ayudarte con peliculas y entretenimiento.';
 

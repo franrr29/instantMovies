@@ -1,6 +1,9 @@
 import { Outlet } from 'react-router-dom';
+
 import { Chat } from '../pages/Chat';
 import { Navbar } from './Navbar';
+
+
 
 export function Layout() {
   return (

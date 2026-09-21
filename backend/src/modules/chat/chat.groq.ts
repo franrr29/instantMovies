@@ -1,12 +1,17 @@
 import type Groq from 'groq-sdk';
+
 import { ChatMessageRole } from '../../generated/prisma/client';
 import { groq } from '../../shared/groq';
 import type { ChatMessageRecord } from './chat.repository';
 import { type ChatMovieResult, discoverMovieTool, executeTool, searchMovieTool } from './chat.tools';
 
+
+
 const CHAT_MODEL = 'qwen/qwen3.8-27b';
 const CHAT_TIMEOUT_MS = 30000;
 const MAX_TOOL_CALLS = 3;
+
+
 
 // una ventana de historial cortada puede dejar un mensaje tool sin su assistant tool_call, y groq
 // rechaza el request; por eso el historial arranca siempre en un turno de usuario
@@ -14,6 +19,8 @@ export function startAtFirstUserTurn(history: ChatMessageRecord[]): ChatMessageR
   const firstUserIndex = history.findIndex((entry) => entry.role === ChatMessageRole.USER);
   return firstUserIndex === -1 ? [] : history.slice(firstUserIndex);
 }
+
+
 
 export function toGroqMessage(entry: ChatMessageRecord): Groq.Chat.ChatCompletionMessageParam {
   if (entry.role === ChatMessageRole.TOOL) {
@@ -30,6 +37,8 @@ export function toGroqMessage(entry: ChatMessageRecord): Groq.Chat.ChatCompletio
 
   return { role: entry.role === ChatMessageRole.USER ? 'user' : 'assistant', content: entry.content };
 }
+
+
 
 async function callGroqChat(
   messages: Groq.Chat.ChatCompletionMessageParam[],
@@ -48,6 +57,8 @@ async function callGroqChat(
     clearTimeout(timeoutId);
   }
 }
+
+
 
 async function runToolCallingLoop(
   messages: Groq.Chat.ChatCompletionMessageParam[],
@@ -94,6 +105,8 @@ async function runToolCallingLoop(
     });
   }
 }
+
+
 
 // agrega a messages los assistant tool_call y los tool del turno; el llamador los persiste como traza
 export async function processChatTurn(

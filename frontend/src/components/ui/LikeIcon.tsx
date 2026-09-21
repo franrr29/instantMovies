@@ -1,5 +1,7 @@
 import { cn } from '../../lib/cn';
 
+
+
 // corazon animado: bounce + rojo al likear, fade de vuelta a muted al deslikear
 export function LikeIcon({ liked }: { liked: boolean }) {
   return (

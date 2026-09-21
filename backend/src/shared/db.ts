@@ -1,4 +1,6 @@
 import { PrismaClient } from '../generated/prisma/client';
 
-// instancia de PrismaClient 
+
+
+// instancia de PrismaClient
 export const prisma = new PrismaClient();

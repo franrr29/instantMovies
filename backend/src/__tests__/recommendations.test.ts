@@ -1,7 +1,10 @@
 // tests unitarios de recommendations.service: sin likes, pending duplicado, enriquecimiento parcial TMDB, validacion respuesta groq
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { RecommendationStatus } from '../generated/prisma/client';
 import { groqRecommendationSchema } from '../shared/groq';
+
+
 
 vi.mock('../modules/likes/likes.repository', () => ({
   getLikesByUser: vi.fn(),
@@ -23,6 +26,8 @@ vi.mock('../shared/tmdb', () => ({
   getMovieById: vi.fn(),
 }));
 
+
+
 import { getLikesByUser } from '../modules/likes/likes.repository';
 import {
   createRecommendation,
@@ -37,6 +42,8 @@ import {
   requestRecommendation,
 } from '../modules/recommendations/recommendations.service';
 
+
+
 function fakeTmdbMovie(tmdbMovieId: number) {
   return {
     id: tmdbMovieId,
@@ -48,6 +55,8 @@ function fakeTmdbMovie(tmdbMovieId: number) {
     genres: [],
   };
 }
+
+
 
 describe('recommendations.service', () => {
   beforeEach(() => {

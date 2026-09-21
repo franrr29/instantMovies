@@ -4,6 +4,8 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+
+
 vi.mock('../services/moviesService', () => ({
   getTrendingMovies: vi.fn(),
   searchMovies: vi.fn(),
@@ -15,10 +17,14 @@ vi.mock('../services/likesService', () => ({
   removeLike: vi.fn(),
 }));
 
+
+
 import { addLike, getLikes } from '../services/likesService';
 import { getTrendingMovies, searchMovies } from '../services/moviesService';
 import { MovieList } from '../pages/MovieList';
 import type { Movie } from '../types';
+
+
 
 function fakeMovie(id: number, title: string): Movie {
   return {
@@ -31,6 +37,8 @@ function fakeMovie(id: number, title: string): Movie {
   };
 }
 
+
+
 function renderMovieList() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -42,6 +50,8 @@ function renderMovieList() {
     </QueryClientProvider>,
   );
 }
+
+
 
 describe('MovieList', () => {
   beforeEach(() => {

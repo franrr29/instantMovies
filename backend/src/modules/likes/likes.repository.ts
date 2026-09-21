@@ -1,6 +1,8 @@
 import { Prisma } from '../../generated/prisma/client';
 import { prisma } from '../../shared/db';
 
+
+
 export interface LikeRecord {
   id: number;
   userId: number;
@@ -8,9 +10,13 @@ export interface LikeRecord {
   createdAt: Date;
 }
 
+
+
 // mensajes que el service reconoce para traducirlos a LikesServiceError
 export const ALREADY_LIKED_MESSAGE = 'pelicula ya marcada como me gusta';
 export const LIKE_NOT_FOUND_MESSAGE = 'like no encontrado';
+
+
 
 export async function addLike(userId: number, tmdbMovieId: number): Promise<LikeRecord> {
   try {
@@ -22,6 +28,8 @@ export async function addLike(userId: number, tmdbMovieId: number): Promise<Like
     throw err;
   }
 }
+
+
 
 export async function removeLike(userId: number, tmdbMovieId: number): Promise<void> {
   try {
@@ -35,6 +43,8 @@ export async function removeLike(userId: number, tmdbMovieId: number): Promise<v
     throw err;
   }
 }
+
+
 
 export async function getLikesByUser(userId: number): Promise<LikeRecord[]> {
   return prisma.like.findMany({ where: { userId } });

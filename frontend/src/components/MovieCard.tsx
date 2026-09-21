@@ -1,8 +1,13 @@
 import type { ReactNode } from 'react';
+
 import { PosterFallback } from './ui/PosterFallback';
+
+
 
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w342';
 const OVERVIEW_TRUNCATE_LENGTH = 240;
+
+
 
 export interface MovieCardProps {
   title: string;
@@ -12,10 +17,14 @@ export interface MovieCardProps {
   children?: ReactNode;
 }
 
+
+
 function truncateOverview(overview: string): string {
   if (overview.length <= OVERVIEW_TRUNCATE_LENGTH) return overview;
   return `${overview.slice(0, OVERVIEW_TRUNCATE_LENGTH).trimEnd()}…`;
 }
+
+
 
 export function MovieCard({ title, overview, posterPath, voteAverage, children }: MovieCardProps) {
   return (

@@ -1,6 +1,10 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios';
 
+
+
 export const AUTH_LOGOUT_EVENT = 'auth:logout';
+
+
 
 // config custom para requests que no deben disparar auth:logout ante un 401
 // (ej. el chequeo de sesion al montar la app, que 401ea normalmente si no
@@ -8,6 +12,8 @@ export const AUTH_LOGOUT_EVENT = 'auth:logout';
 export interface SkipAuthLogoutConfig {
   _skipAuthLogout?: boolean;
 }
+
+
 
 // la cookie httpOnly la maneja el navegador: withCredentials alcanza para
 // que viaje en cada request, no hay token que inyectar a mano

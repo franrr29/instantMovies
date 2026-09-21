@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import type { NextFunction, Request, Response } from 'express';
+
 import { runWithRequestId } from './requestContext';
+
+
 
 declare global {
   namespace Express {
@@ -10,7 +13,11 @@ declare global {
   }
 }
 
+
+
 const REQUEST_ID_HEADER = 'x-request-id';
+
+
 
 // si el cliente ya manda un request id lo reusamos (util para tracing entre servicios),
 // si no, generamos uno nuevo; se propaga via AsyncLocalStorage para que el logger lo

@@ -7,6 +7,8 @@ function Dot({ delay }: { delay?: string }) {
   );
 }
 
+
+
 export function TypingDots() {
   return (
     <span className="flex items-center gap-1" role="status" aria-label="Escribiendo…">

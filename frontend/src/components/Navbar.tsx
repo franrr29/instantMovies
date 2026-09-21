@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
+
 import { useAuth } from '../context/AuthContext';
 import { btnSecondary } from './ui/styles';
 import { cn } from '../lib/cn';
+
+
 
 const NAV_LINKS = [
   { to: '/movies', label: 'Películas' },
@@ -10,12 +13,16 @@ const NAV_LINKS = [
   { to: '/recommendations', label: 'Recomendaciones' },
 ];
 
+
+
 function navLinkClassName({ isActive }: { isActive: boolean }): string {
   return cn(
     'border-b pb-0.5 font-display text-[13px] uppercase tracking-[0.08em] transition-colors',
     isActive ? 'border-accent text-accent' : 'border-transparent text-ink/70 hover:text-ink',
   );
 }
+
+
 
 export function Navbar() {
   const { user, logout } = useAuth();

@@ -1,19 +1,30 @@
 import { z } from 'zod';
+
 import { groq } from './groq';
 import { logger } from './logger';
+
+
 
 const guardResponseSchema = z.object({
   allowed: z.boolean(),
 });
 
+
+
 export interface MessageSafety {
   allowed: boolean;
 }
 
+
+
 const GUARD_TIMEOUT_MS = 10000;
 const GUARD_JSON_FALLBACK_REGEX = /\{[\s\S]*?"allowed"\s*:\s*(true|false)[\s\S]*?\}/;
 
+
+
 class GuardParseError extends Error {}
+
+
 
 async function requestGuardCompletion(message: string) {
   const controller = new AbortController();
@@ -41,6 +52,8 @@ async function requestGuardCompletion(message: string) {
   }
 }
 
+
+
 function parseGuardContent(rawContent: string): MessageSafety {
   const cleanContent = rawContent.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
 
@@ -60,11 +73,15 @@ function parseGuardContent(rawContent: string): MessageSafety {
   }
 }
 
+
+
 async function attemptGuardCheck(message: string): Promise<MessageSafety> {
   const completion = await requestGuardCompletion(message);
   const rawContent = completion.choices[0]?.message?.content ?? '';
   return parseGuardContent(rawContent);
 }
+
+
 
 // LLM como guard antes de procesar el chat. Un allowed:false explicito (JSON valido) se respeta siempre.
 // Si tras reintentar una vez sigue fallando por parseo o red, fail-open (allowed:true): el system prompt

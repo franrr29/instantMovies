@@ -2,6 +2,8 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
 
+
+
 // jsdom no implementa scrollIntoView (lo usa Chat.tsx para el auto-scroll)
 if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {};
