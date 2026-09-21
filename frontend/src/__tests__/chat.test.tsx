@@ -6,12 +6,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 
 vi.mock('../services/chatService', () => ({
-  sendMessage: vi.fn(),
+  sendChatMessage: vi.fn(),
 }));
 
 
 
-import { sendMessage } from '../services/chatService';
+import { sendChatMessage } from '../services/chatService';
 import { Chat } from '../pages/Chat';
 import type { ChatMovieResult } from '../types';
 
@@ -39,7 +39,7 @@ function createDeferred<T>() {
 
 
 
-async function sendChatMessage(user: ReturnType<typeof userEvent.setup>, text: string) {
+async function submitChatMessage(user: ReturnType<typeof userEvent.setup>, text: string) {
   await user.click(screen.getByRole('button', { name: 'Abrir chat' }));
 
   const input = screen.getByPlaceholderText('Preguntame algo…');
@@ -56,27 +56,27 @@ describe('Chat', () => {
 
   // el mensaje del usuario se agrega al historial al instante, sin esperar al backend
   it('enviar mensaje: el mensaje del usuario y la respuesta aparecen en el historial', async () => {
-    vi.mocked(sendMessage).mockResolvedValue({ reply: 'Hola, en que te ayudo?', movies: [] });
+    vi.mocked(sendChatMessage).mockResolvedValue({ reply: 'Hola, en que te ayudo?', movies: [] });
 
     const user = userEvent.setup();
     render(<Chat />);
 
-    await sendChatMessage(user, 'hola');
+    await submitChatMessage(user, 'hola');
 
     expect(screen.getByText(/hola/)).toBeInTheDocument();
     expect(await screen.findByText(/Hola, en que te ayudo\?/)).toBeInTheDocument();
-    expect(sendMessage).toHaveBeenCalledWith('hola');
+    expect(sendChatMessage).toHaveBeenCalledWith('hola');
   });
 
   // cuando el LLM encuentra peliculas via tool calling, se muestran como ChatMoviePreview
   it('movies en la respuesta: renderiza 3 ChatMoviePreview debajo de la respuesta', async () => {
     const movies = [fakeMovie(1, 'Pelicula A'), fakeMovie(2, 'Pelicula B'), fakeMovie(3, 'Pelicula C')];
-    vi.mocked(sendMessage).mockResolvedValue({ reply: 'Te recomiendo estas', movies });
+    vi.mocked(sendChatMessage).mockResolvedValue({ reply: 'Te recomiendo estas', movies });
 
     const user = userEvent.setup();
     render(<Chat />);
 
-    await sendChatMessage(user, 'recomendame algo');
+    await submitChatMessage(user, 'recomendame algo');
 
     for (const movie of movies) {
       expect(await screen.findByText(movie.title)).toBeInTheDocument();
@@ -86,12 +86,12 @@ describe('Chat', () => {
   // promesa controlada a mano para inspeccionar el estado intermedio antes de que resuelva
   it('loading: muestra Escribiendo… y deshabilita input y boton mientras espera la respuesta', async () => {
     const deferred = createDeferred<{ reply: string; movies: ChatMovieResult[] }>();
-    vi.mocked(sendMessage).mockReturnValue(deferred.promise);
+    vi.mocked(sendChatMessage).mockReturnValue(deferred.promise);
 
     const user = userEvent.setup();
     render(<Chat />);
 
-    await sendChatMessage(user, 'hola');
+    await submitChatMessage(user, 'hola');
 
     expect(await screen.findByRole('status', { name: 'Escribiendo…' })).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Preguntame algo…')).toBeDisabled();

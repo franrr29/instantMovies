@@ -4,6 +4,7 @@ import { Eyebrow } from '../components/ui/Eyebrow';
 import { btnPrimary, btnSecondary, sectionHeading } from '../components/ui/styles';
 import { TypingDots } from '../components/ui/TypingDots';
 import { cn } from '../lib/cn';
+import { getTmdbImageUrl } from '../utils/tmdb';
 
 
 
@@ -12,8 +13,6 @@ const NAV_LINKS = [
   { href: '#chat', label: 'The assistant' },
   { href: '#faq', label: 'FAQ' },
 ];
-
-const TMDB_POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
 const FILMSTRIP = [
   { title: 'Stalker', meta: 'DRAMA · 1979', gradient: 'from-accent', posterPath: '/1qhOyf5C4s9ZdvY8d5JDx9DFMeT.jpg' },
@@ -96,7 +95,7 @@ const FAQS = [
   },
 ];
 
-const marqueeItems = [
+const MARQUEE_ITEMS = [
   'Powered by TMDB catalogue',
   'Recommendations via Groq',
   'Async queue — no rate-limit anxiety',
@@ -129,7 +128,7 @@ function PosterPlaceholder({ title, meta, gradient, posterPath }: PosterPlacehol
   return (
     <div className="relative aspect-[2/3] border border-divider bg-gradient-to-br from-surface to-bg">
       <img
-        src={`${TMDB_POSTER_BASE_URL}${posterPath}`}
+        src={getTmdbImageUrl(posterPath, 'w500')}
         alt={title}
         className="absolute inset-0 h-full w-full object-cover"
       />
@@ -240,7 +239,7 @@ export function Landing() {
           className="flex w-max animate-marquee gap-8 whitespace-nowrap font-display text-xs
             uppercase tracking-[0.28em] text-ink/50"
         >
-          {[...marqueeItems, ...marqueeItems].map((item, index) => (
+          {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, index) => (
             <span key={index} className="flex items-center gap-8">
               {item} <span>·</span>
             </span>

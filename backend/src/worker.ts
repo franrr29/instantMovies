@@ -6,11 +6,15 @@ import {
   completeRecommendation,
   failRecommendation,
 } from './modules/recommendations/recommendations.repository';
-import { redisConnection } from './queue/recommendationQueue';
+import { RECOMMENDATIONS_QUEUE_NAME, redisConnection } from './queue/recommendationQueue';
 import { prisma } from './shared/db';
 import { generateRecommendation } from './shared/groq';
 import { logger } from './shared/logger';
 import { getMovieById } from './shared/tmdb';
+
+
+
+const RATE_LIMIT_WINDOW_MS = 60_000;
 
 
 
@@ -76,12 +80,12 @@ async function processRecommendationJob(job: Job<RecommendationJobData>): Promis
 
 
 export const recommendationWorker = new Worker<RecommendationJobData>(
-  'recommendations',
+  RECOMMENDATIONS_QUEUE_NAME,
   processRecommendationJob,
   {
     connection: redisConnection,
     // conservador para el free tier de groq: 28 jobs por minuto
-    limiter: { max: 28, duration: 60000 },
+    limiter: { max: 28, duration: RATE_LIMIT_WINDOW_MS },
   },
 );
 
@@ -89,7 +93,7 @@ logger.info('worker de recomendaciones arrancado');
 
 
 
-async function shutdown(signal: string) {
+async function shutdownWorker(signal: string) {
   logger.info({ signal }, 'señal recibida, iniciando apagado prolijo del worker');
 
   try {
@@ -114,5 +118,5 @@ async function shutdown(signal: string) {
 
 
 process.on('SIGTERM', () => {
-  shutdown('SIGTERM');
+  shutdownWorker('SIGTERM');
 });

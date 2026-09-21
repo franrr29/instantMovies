@@ -23,7 +23,7 @@ declare global {
 
 
 
-function unauthorized(message: string): HttpError {
+function createUnauthorizedError(message: string): HttpError {
   const error: HttpError = new Error(message);
   error.statusCode = 401;
   return error;
@@ -31,11 +31,11 @@ function unauthorized(message: string): HttpError {
 
 
 
-export function authenticate(req: Request, res: Response, next: NextFunction) {
+export function authenticate(req: Request, _res: Response, next: NextFunction) {
   const token = req.cookies?.[AUTH_COOKIE_NAME];
 
   if (!token) {
-    next(unauthorized('token no provisto'));
+    next(createUnauthorizedError('token no provisto'));
     return;
   }
 
@@ -45,6 +45,6 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
     req.user = { id: Number(payload.sub), username: payload.username };
     next();
   } catch {
-    next(unauthorized('token invalido o expirado'));
+    next(createUnauthorizedError('token invalido o expirado'));
   }
 }

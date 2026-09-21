@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
 
+import { getTmdbImageUrl } from '../utils/tmdb';
 import { PosterFallback } from './ui/PosterFallback';
 
 
 
-const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w342';
 const OVERVIEW_TRUNCATE_LENGTH = 240;
 
 
@@ -32,7 +32,7 @@ export function MovieCard({ title, overview, posterPath, voteAverage, children }
       <div className="relative aspect-[2/3] bg-surface">
         {posterPath ? (
           <img
-            src={`${TMDB_IMAGE_BASE_URL}${posterPath}`}
+            src={getTmdbImageUrl(posterPath, 'w342')}
             alt={title}
             className="h-full w-full object-cover"
           />

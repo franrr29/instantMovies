@@ -7,6 +7,9 @@ import { searchMovies } from './tmdb';
 
 
 
+const RECOMMENDATION_MODEL = 'qwen/qwen3.8-27b';
+const RECOMMENDATION_MAX_TOKENS = 600;
+
 // groq solo devuelve titulo y razon: los LLMs no conocen los IDs de TMDB y los
 // inventan, asi que el ID real se resuelve despues buscando el titulo en TMDB
 const groqMovieSchema = z.object({
@@ -67,10 +70,10 @@ export async function generateRecommendation(
   const prompt = buildPrompt(likedMovies);
 
   const completion = await groq.chat.completions.create({
-    model: 'qwen/qwen3.8-27b',
+    model: RECOMMENDATION_MODEL,
     messages: [{ role: 'user', content: prompt }],
     response_format: { type: 'json_object' },
-    max_tokens: 600,
+    max_tokens: RECOMMENDATION_MAX_TOKENS,
   });
 
   const rawContent = completion.choices[0]?.message?.content ?? '';

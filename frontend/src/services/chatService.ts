@@ -10,7 +10,7 @@ export interface SendMessageResult {
 
 
 
-export async function sendMessage(message: string): Promise<SendMessageResult> {
+export async function sendChatMessage(message: string): Promise<SendMessageResult> {
   const response = await api.post<SendMessageResult>('/chat', { message });
   return response.data;
 }

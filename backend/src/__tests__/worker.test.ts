@@ -27,6 +27,7 @@ vi.mock('bullmq', () => ({
 }));
 
 vi.mock('../queue/recommendationQueue', () => ({
+  RECOMMENDATIONS_QUEUE_NAME: 'recommendations',
   redisConnection: { quit: vi.fn() },
 }));
 

@@ -3,12 +3,9 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { btnPrimary, btnSecondary, inputClasses } from '../components/ui/styles';
 import { TypingDots } from '../components/ui/TypingDots';
 import { cn } from '../lib/cn';
-import { sendMessage } from '../services/chatService';
+import { sendChatMessage } from '../services/chatService';
 import type { ChatMessage, ChatMovieResult } from '../types';
-
-
-
-const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w92';
+import { getTmdbImageUrl } from '../utils/tmdb';
 
 
 
@@ -18,7 +15,7 @@ function ChatMoviePreview({ movie }: { movie: ChatMovieResult }) {
       <div className="h-16 w-11 flex-shrink-0 bg-surface">
         {movie.posterPath && (
           <img
-            src={`${TMDB_IMAGE_BASE_URL}${movie.posterPath}`}
+            src={getTmdbImageUrl(movie.posterPath, 'w92')}
             alt={movie.title}
             className="h-full w-full object-cover"
           />
@@ -79,7 +76,7 @@ export function Chat() {
     setIsSending(true);
 
     try {
-      const { reply, movies } = await sendMessage(text);
+      const { reply, movies } = await sendChatMessage(text);
       setMessages((prev) => [...prev, { role: 'assistant', content: reply, movies }]);
       setLastFailedMessage(null);
     } catch {

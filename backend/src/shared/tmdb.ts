@@ -50,7 +50,7 @@ function getApiKey(): string {
 
 
 
-async function fetchFromTmdb(path: string, params: Record<string, string>): Promise<TmdbMovie[]> {
+async function fetchMovieList(path: string, params: Record<string, string>): Promise<TmdbMovie[]> {
   const url = new URL(`${TMDB_BASE_URL}${path}`);
   url.searchParams.set('api_key', getApiKey());
 
@@ -72,14 +72,14 @@ async function fetchFromTmdb(path: string, params: Record<string, string>): Prom
 
 // sin page, devuelve la primera pagina de peliculas populares
 export async function getPopularMovies(page = 1): Promise<TmdbMovie[]> {
-  return fetchFromTmdb('/movie/popular', { page: String(page) });
+  return fetchMovieList('/movie/popular', { page: String(page) });
 }
 
 
 
 // le dice a fetch que busque peliculas que coincidan con el query proporcionado
 export async function searchMovies(query: string, page = 1): Promise<TmdbMovie[]> {
-  return fetchFromTmdb('/search/movie', { query, page: String(page) });
+  return fetchMovieList('/search/movie', { query, page: String(page) });
 }
 
 
@@ -87,7 +87,7 @@ export async function searchMovies(query: string, page = 1): Promise<TmdbMovie[]
 // peliculas en tendencia de la semana; es el catalogo inicial cuando el usuario
 // todavia no escribio ninguna busqueda
 export async function getTrendingMovies(page = 1): Promise<TmdbMovie[]> {
-  return fetchFromTmdb('/trending/movie/week', { page: String(page) });
+  return fetchMovieList('/trending/movie/week', { page: String(page) });
 }
 
 
@@ -117,7 +117,7 @@ export async function discoverMovies(filters: DiscoverMoviesFilters, page = 1): 
     params['vote_average.gte'] = String(filters.minRating);
   }
 
-  return fetchFromTmdb('/discover/movie', params);
+  return fetchMovieList('/discover/movie', params);
 }
 
 

@@ -3,7 +3,7 @@ import type Groq from 'groq-sdk';
 import { ChatMessageRole } from '../../generated/prisma/client';
 import { groq } from '../../shared/groq';
 import type { ChatMessageRecord } from './chat.repository';
-import { type ChatMovieResult, discoverMovieTool, executeTool, searchMovieTool } from './chat.tools';
+import { type ChatMovieResult, discoverMoviesTool, executeTool, searchMovieTool } from './chat.tools';
 
 
 
@@ -62,7 +62,7 @@ async function callGroqChat(
 
 async function runToolCallingLoop(
   messages: Groq.Chat.ChatCompletionMessageParam[],
-  movies: ChatMovieResult[],
+  collectedMovies: ChatMovieResult[],
   forceTool: boolean,
   seenMovieIds: number[],
 ): Promise<string> {
@@ -72,7 +72,7 @@ async function runToolCallingLoop(
   while (true) {
     // solo la primera vuelta fuerza la tool; con el resultado ya en el contexto el modelo decide
     const toolChoice = forceTool && toolCallsUsed === 0 ? 'required' : 'auto';
-    const completion = await callGroqChat(messages, [searchMovieTool, discoverMovieTool], toolChoice);
+    const completion = await callGroqChat(messages, [searchMovieTool, discoverMoviesTool], toolChoice);
     const responseMessage = completion.choices[0]?.message;
     const toolCall = responseMessage?.tool_calls?.[0];
 
@@ -80,7 +80,7 @@ async function runToolCallingLoop(
       const content = responseMessage?.content;
 
       // groq a veces devuelve el resultado del tool sin texto; le pedimos que lo redacte, ya sin tools
-      if (!content && movies.length > 0) {
+      if (!content && collectedMovies.length > 0) {
         const finalCompletion = await callGroqChat(messages);
         return finalCompletion.choices[0]?.message?.content ?? '';
       }
@@ -97,7 +97,7 @@ async function runToolCallingLoop(
     });
 
     // executeTool no lanza si tmdb falla: devuelve un resultado de error para el modelo
-    const toolResultContent = await executeTool(toolCall, movies, seenMovieIds);
+    const toolResultContent = await executeTool(toolCall, collectedMovies, seenMovieIds);
 
     messages.push({
       role: 'tool',

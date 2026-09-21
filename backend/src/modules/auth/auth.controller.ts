@@ -59,7 +59,7 @@ export async function login(req: Request, res: Response, next: NextFunction) {
 
 
 // limpia la cookie de auth
-export async function logout(req: Request, res: Response) {
+export async function logout(_req: Request, res: Response) {
   clearAuthCookie(res);
   res.status(200).json({ message: 'Logged out' });
 }

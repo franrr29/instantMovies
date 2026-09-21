@@ -6,11 +6,12 @@ import { type TmdbMovie, discoverMovies, searchMovies } from '../../shared/tmdb'
 
 
 const DISCOVER_MAX_PAGES = 3;
+const MAX_TOOL_RESULTS = 5;
 
 
 
 // si tmdb falla, el modelo recibe un resultado de error en vez de que se rompa el chat
-function toolFailedResult(err: unknown, toolName: string): string {
+function logAndBuildToolError(err: unknown, toolName: string): string {
   logger.warn(
     { err, cause: err instanceof Error ? err.cause : undefined, toolName },
     'fallo la busqueda en tmdb desde una tool del chat',
@@ -46,7 +47,7 @@ export const searchMovieTool: Groq.Chat.ChatCompletionTool = {
   },
 };
 
-export const discoverMovieTool: Groq.Chat.ChatCompletionTool = {
+export const discoverMoviesTool: Groq.Chat.ChatCompletionTool = {
   type: 'function',
   function: {
     name: 'discover_movies',
@@ -115,10 +116,10 @@ export async function executeTool(
           break;
         }
 
-        results = found.filter((movie) => !excluded.has(movie.id)).slice(0, 5);
+        results = found.filter((movie) => !excluded.has(movie.id)).slice(0, MAX_TOOL_RESULTS);
       }
     } catch (err) {
-      return toolFailedResult(err, toolCall.function.name);
+      return logAndBuildToolError(err, toolCall.function.name);
     }
 
     movies.push(
@@ -144,7 +145,7 @@ export async function executeTool(
   try {
     results = await searchMovies(toolArgs.title);
   } catch (err) {
-    return toolFailedResult(err, toolCall.function.name);
+    return logAndBuildToolError(err, toolCall.function.name);
   }
 
   const [found] = results;

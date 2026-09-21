@@ -12,7 +12,7 @@ const server = app.listen(env.PORT, () => {
 
 
 
-async function shutdown(signal: string) {
+async function shutdownApi(signal: string) {
   logger.info({ signal }, 'señal recibida, iniciando apagado prolijo');
 
   try {
@@ -47,5 +47,5 @@ async function shutdown(signal: string) {
 
 
 process.on('SIGTERM', () => {
-  shutdown('SIGTERM');
+  shutdownApi('SIGTERM');
 });

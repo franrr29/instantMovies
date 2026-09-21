@@ -135,7 +135,7 @@ export function MovieList() {
         {movies.length > PAGE_SIZE && (
           <div className="flex items-center justify-center gap-4 pt-4">
             <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
               className={cn(btnSecondary, 'px-4 py-2 text-xs')}
             >
@@ -145,7 +145,7 @@ export function MovieList() {
               Página {currentPage} de {totalPages}
             </span>
             <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
               className={cn(btnSecondary, 'px-4 py-2 text-xs')}
             >
