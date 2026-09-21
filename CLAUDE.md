@@ -31,7 +31,7 @@ las consume a ritmo controlado. Ese desacople es la decisión central del diseñ
 Monolito modular organizado por feature. Un solo repo (monorepo): backend/ y frontend/.
 
 Backend = 2 procesos que comparten el mismo código:
-- app.ts    → la API (atiende HTTP)
+- index.ts  → la API (atiende HTTP; levanta la app definida en app.ts)
 - worker.ts → el worker (consume la cola, llama a Groq)
 
 ### Regla de oro de las capas
@@ -52,30 +52,40 @@ Consecuencia: cambiar el motor de DB afecta solo a los repositories.
 
 instantMovies/
 ├── CLAUDE.md
+├── README.md
+├── Dockerfile               // imagen de produccion del backend (api y worker)
 ├── docker-compose.yml
+├── .env.example
+├── docs/diagrams/           // diagramas de arquitectura (HTML)
 ├── backend/
-│ ├── Dockerfile
-│ ├── prisma/ // schema y migraciones
-│ └── src/
-│ ├── modules/
-│ │ ├── auth/ // controller, service, repo, rutas
-│ │ ├── chat/ // controller, service, repo, prompt, tools, schemas, rutas
-│ │ ├── movies/
-│ │ ├── likes/
-│ │ └── recommendations/
-│ ├── shared/ // middlewares, config, errores
-│ ├── queue/ // setup de bullmq
-│ ├── app.ts // entrada de la API
-│ └── worker.ts // entrada del worker
+│   ├── prisma/              // schema.prisma y migraciones
+│   └── src/
+│       ├── modules/
+│       │   ├── auth/            // controller, service, repository, routes, schemas
+│       │   ├── chat/            // controller, service, repository, routes, schemas, prompt, tools, groq, utils
+│       │   ├── movies/          // controller, service, routes (sin repository: consulta TMDB)
+│       │   ├── likes/
+│       │   └── recommendations/
+│       ├── shared/          // middlewares, config, errores, clientes (groq, tmdb), guard, sanitize
+│       ├── queue/           // setup de bullmq
+│       ├── app.ts           // arma la app de Express
+│       ├── index.ts         // entrada de la API
+│       ├── worker.ts        // entrada del worker
+│       ├── seed.ts          // usuario y datos demo (se compila a dist/seed.js)
+│       ├── __tests__/       // tests (vitest)
+│       └── spects/          // specs por modulo
 └── frontend/
-└── src/
-├── api/client.ts // url base, token, errores centralizados
-├── services/ // authService, moviesService, ...
-├── components/
-├── pages/
-├── context/AuthContext.tsx
-├── hooks/useAuth.ts
-└── App.tsx
+    └── src/
+        ├── services/        // api.ts (axios: url base, cookie de sesion, interceptor de 401) y un service por dominio
+        ├── components/      // Layout, Navbar, MovieCard, ProtectedRoute y ui/
+        ├── pages/
+        ├── context/AuthContext.tsx   // AuthProvider y el hook useAuth
+        ├── hooks/           // useDebounce
+        ├── lib/, utils/     // cn, validaciones de auth, url de imagenes de TMDB
+        ├── types/
+        ├── __tests__/, test/   // tests (vitest + testing library) y setup
+        ├── spects/          // specs por pantalla
+        └── App.tsx
 
 
 Todo lo de un dominio (controller, service, repo, rutas) vive junto en su carpeta.
@@ -98,15 +108,22 @@ referencia tmdb_movie_id.
 
 - POST   /auth/register
 - POST   /auth/login
+- POST   /auth/logout
+- GET    /auth/me
 - GET    /movies              (búsqueda por texto + paginación)
+- GET    /movies/trending     (trending de la semana)
 - POST   /likes
 - GET    /likes
 - DELETE /likes/:tmdbId
 - POST   /recommendations     (responde 202 Accepted, NO el resultado)
 - GET    /recommendations     (lista con su status)
+- GET    /recommendations/:id (detalle de una recomendación)
 - POST   /chat                (chat conversacional con tools TMDB)
+- GET    /health              (público, sin auth, fuera de /api/v1)
 
-Todo salvo /auth requiere JWT válido.
+Todas las rutas van bajo el prefijo /api/v1, excepto /health.
+
+Todo requiere JWT válido salvo /auth/register, /auth/login y /health (público, sin auth). /auth/logout y /auth/me sí requieren JWT.
 
 ## Reglas del flujo asíncrono (crítico)
 
@@ -148,7 +165,7 @@ Todo salvo /auth requiere JWT válido.
 
 - Levantar todo:        docker compose up --build
 - Migraciones Prisma:   corren al arranque del contenedor
-- Tests:                (a definir por bloque)
+- Tests:                cd backend && npm test (Vitest, 7 archivos, 52 tests) · cd frontend && npm test (Vitest + Testing Library, 4 archivos, 14 tests)
 
 ## Principios
 
