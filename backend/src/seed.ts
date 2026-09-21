@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import bcrypt from 'bcrypt';
-import { RecommendationStatus } from '../src/generated/prisma/client';
-import { prisma } from '../src/shared/db';
+import { RecommendationStatus } from './generated/prisma/client';
+import { prisma } from './shared/db';
 
 const SALT_ROUNDS = 10;
 
