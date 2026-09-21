@@ -1,5 +1,18 @@
+# InstantMovies
 
-Cada módulo del backend sigue la estructura `controller → service → schema (Zod)`, separando la responsabilidad de routing, lógica de negocio y validación.
+Sistema de recomendación de películas: el usuario explora el catálogo de TMDB, marca las que le gustan y recibe recomendaciones generadas por un LLM (Groq), con un chat conversacional que busca películas en TMDB.
+
+Cada módulo del backend sigue la estructura `routes → controller → service → repository` (+ schema Zod), separando la responsabilidad de routing, traducción HTTP, lógica de negocio, acceso a datos y validación. El módulo `movies` no tiene repository: consulta TMDB directamente.
+
+## Stack
+
+- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS 4, TanStack Query, React Router, axios
+- **Backend:** Node.js 20, Express 4, TypeScript, Zod, JWT (cookie httpOnly) + bcrypt, helmet, cors, express-rate-limit, pino
+- **Base de datos:** MySQL 8 con Prisma 6
+- **Cola y worker:** Redis 7 + BullMQ (el worker corre como proceso aparte)
+- **LLM y catálogo:** Groq (`qwen/qwen3.8-27b`) a través del proxy Helicone, y TMDB
+- **Infra:** Docker Compose (mysql, redis, api, worker, frontend)
+- **Tests:** Vitest (con Testing Library y jsdom en el frontend)
 
 ---
 
@@ -17,21 +30,22 @@ Cada módulo del backend sigue la estructura `controller → service → schema 
 | Método | Ruta | Descripción |
 |---|---|---|
 | `GET` | `/api/v1/movies/trending` | Películas trending de la semana (TMDB) |
-| `GET` | `/api/v1/movies/search?q=` | Buscar películas por título (TMDB) |
+| `GET` | `/api/v1/movies?query=&page=` | Buscar películas por título (TMDB); `page` por defecto 1 |
+| `GET` | `/api/v1/movies?page=` | Películas populares (TMDB), cuando no se envía `query` |
 
 ### Likes
 | Método | Ruta | Descripción |
 |---|---|---|
 | `GET` | `/api/v1/likes` | Listar películas que le gustaron al usuario |
 | `POST` | `/api/v1/likes` | Dar like a una película |
-| `DELETE` | `/api/v1/likes/:tmdbMovieId` | Quitar like |
+| `DELETE` | `/api/v1/likes/:tmdbId` | Quitar like |
 
 ### Recommendations
 | Método | Ruta | Descripción |
 |---|---|---|
 | `POST` | `/api/v1/recommendations` | Solicitar recomendación (202 — async) |
 | `GET` | `/api/v1/recommendations` | Listar recomendaciones del usuario |
-| `GET` | `/api/v1/recommendations/:id` | Detalle de una recomendación (con polling de estado) |
+| `GET` | `/api/v1/recommendations/:id` | Detalle de una recomendación. El polling de estado lo hace el frontend sobre el listado (`GET /api/v1/recommendations`), no sobre este endpoint |
 
 ### Chat
 | Método | Ruta | Descripción |
@@ -51,7 +65,7 @@ Cada módulo del backend sigue la estructura `controller → service → schema 
 
 ### Requisitos previos
 - Docker y Docker Compose instalados
-- API keys de [TMDB](https://developer.themoviedb.org/docs/getting-started) y [Groq](https://console.groq.com)
+- API keys de [TMDB](https://developer.themoviedb.org/docs/getting-started), [Groq](https://console.groq.com) y [Helicone](https://www.helicone.ai)
 
 ### Pasos
 
@@ -72,11 +86,12 @@ cp .env.example .env
 docker compose up --build
 ```
 
-4. Ejecutar migraciones y seed (primera vez):
+4. Cargar los datos de prueba con el seed (primera vez):
 ```bash
-docker compose exec api npx prisma migrate deploy
-docker compose exec api npx prisma db seed
+docker compose exec api node dist/seed.js
 ```
+
+   Las migraciones no requieren un paso manual: el servicio `api` corre `prisma migrate deploy` al arrancar. Esperar a que `api` termine de levantar antes de correr el seed.
 
 5. Acceder:
    - Frontend: `http://localhost:5173`
@@ -94,7 +109,7 @@ El token se guarda en una cookie httpOnly, invisible para JavaScript del cliente
 Groq tiene rate limits estrictos. En lugar de hacer al usuario esperar la respuesta del LLM en el request HTTP, se encola el job y se responde 202. El worker procesa al ritmo que permite el rate limit. El frontend hace polling hasta que el estado cambia. Esto desacopla la experiencia del usuario de las limitaciones de la API externa.
 
 ### Campo `movies Json?` en vez de tabla hija para recomendaciones
-Una recomendación siempre devuelve exactamente 3 películas con su justificación. No se consultan individualmente ni se filtran. Un campo JSON en la tabla `Recommendation` simplifica el modelo sin sacrificar funcionalidad. Si las películas recomendadas necesitaran relaciones propias, ahí sí se justificaría una tabla.
+Una recomendación devuelve hasta 3 películas con su justificación (Groq propone 3 y se descartan las que TMDB no resuelve). No se consultan individualmente ni se filtran. Un campo JSON en la tabla `Recommendation` simplifica el modelo sin sacrificar funcionalidad. Si las películas recomendadas necesitaran relaciones propias, ahí sí se justificaría una tabla.
 
 ### Enriquecimiento TMDB en backend con resiliencia parcial
 Los datos de TMDB (poster, título, rating) se agregan en el backend antes de enviar al frontend. Si TMDB falla para una película, un try/catch individual permite devolver las demás con datos mínimos en vez de fallar toda la respuesta.
@@ -105,13 +120,14 @@ El chat incluye un guard que usa el mismo modelo (`qwen/qwen3.8-27b`) para valid
 ### TanStack Query selectivo
 Se usa para server state (movies, likes, recommendations) donde cache e invalidación aportan valor. No se usa para auth (manejado con Context + cookie) ni chat (estado local por naturaleza conversacional).
 
-### Arquitectura de capas: controller → service → schema
-Cada módulo separa routing (controller), lógica de negocio (service) y validación de entrada (schema Zod). Esto permite testear la lógica sin HTTP y cambiar validaciones sin tocar servicios.
+### Arquitectura de capas: routes → controller → service → repository (+ schema Zod)
+Cada módulo separa las rutas (routes), la traducción HTTP (controller), la lógica de negocio (service), el acceso a datos (repository) y la validación de entrada (schema Zod). Esto permite testear la lógica sin HTTP y cambiar validaciones sin tocar servicios.
 
 ### Chat como modal flotante
 El chat se implementa como un modal flotante accesible desde un botón circular fijo en la esquina inferior derecha. Esto permite al usuario interactuar con el asistente de IA desde cualquier pantalla sin perder el contexto de navegación.
 
 ---
+
 ## Diagramas de Arquitectura
 
 Diagramas interactivos generados con Archify, publicados en GitHub Pages:
@@ -119,19 +135,27 @@ Diagramas interactivos generados con Archify, publicados en GitHub Pages:
 - **[Arquitectura general](https://franrr29.github.io/instantMovies/docs/diagrams/architecture.html)** — Los 5 servicios de Docker Compose, Groq vía Helicone y el módulo chat
 - **[Flujo de recomendaciones](https://franrr29.github.io/instantMovies/docs/diagrams/recommendations-flow.html)** — Pipeline asíncrono: Groq devuelve títulos y el worker los resuelve en TMDB
 - **[Flujo del chat](https://franrr29.github.io/instantMovies/docs/diagrams/chat-flow.html)** — Guard, tool calling con `search_movie` y `discover_movies`, y traza persistida
+
 ## Testing
 
 ### Backend
 - **Framework:** Vitest con mocks de servicios
-- **Archivos:** auth, recommendations, likes, chat, worker
+- **Archivos (7, 52 tests):**
+  - `auth.test.ts` — schemas de auth: email, password y normalización a minúsculas (12)
+  - `likes.test.ts` — service de likes: duplicado, no encontrado y enriquecimiento parcial de TMDB (3)
+  - `recommendations.test.ts` — service de recomendaciones y validación de la respuesta de Groq (7)
+  - `worker.test.ts` — job del worker: éxito, reintentos disponibles y reintentos agotados (4)
+  - `groq.test.ts` — resolución de los títulos de Groq a IDs de TMDB (4)
+  - `chat.test.ts` — chat.service (bloqueo por sanitización y por guard) y chat.utils (16)
+  - `chat.tools.test.ts` — tools del chat: exclusión de películas ya vistas y paginación de `discover_movies` (6)
 - **Ejecutar:** `cd backend && npm test`
 
 ### Frontend
 - **Framework:** Vitest + Testing Library + jsdom
-- **Archivos:** AuthContext, Recommendations, MovieList, Chat
+- **Archivos (4, 14 tests):** AuthContext (4), Recommendations (4), MovieList (3), Chat (3)
 - **Ejecutar:** `cd frontend && npm test`
 
-> Todos los tests pasan (14/14 frontend, backend todo verde).
+> Todos los tests pasan (52/52 backend, 14/14 frontend).
 
 ---
 
@@ -141,7 +165,7 @@ Esta prueba técnica fue desarrollada utilizando **Claude Code CLI** como herram
 
 ### Archivos de configuración del agente
 - **`CLAUDE.md`** — Instrucciones del proyecto, convenciones de código, stack, y reglas para el agente
-- **`backend/src/spects/`** — Specs por módulo del backend (auth, movies, likes, recommendations, chat, testing)
+- **`backend/src/spects/`** — Specs por módulo del backend (auth, movies, likes, recommendations, chat, infra, testing)
 - **`frontend/src/spects/`** — Specs por pantalla del frontend (login-register, movie-list, likes, recommendations, chat, shared-components, testing)
 
 ### Skills utilizadas
@@ -157,8 +181,8 @@ Se siguió un enfoque **Spec Driven Development**: cada módulo/pantalla tiene s
 ## Mejoras Futuras
 
 - **WebSockets** para recomendaciones en tiempo real (reemplazar polling)
-- **Paginación** en endpoints de listado (movies, likes, recommendations)
+- **Paginación** en los listados de likes y recommendations (`GET /movies` ya acepta `page`; el frontend pagina en cliente)
 - **Refresh token** con rotación automática para sesiones más largas
 - **Rate limiting distribuido** con Redis (actualmente in-memory por instancia)
 - **CI/CD** con GitHub Actions (lint, tests, build, deploy)
-- **Monitoring** con métricas de uso de LLM (tokens, latencia, costos)
+- **Monitoring** propio de la app y de la cola (Helicone ya registra las llamadas a Groq, con métricas básicas de uso)
