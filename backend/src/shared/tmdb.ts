@@ -70,14 +70,14 @@ async function fetchFromTmdb(path: string, params: Record<string, string>): Prom
 
 
 
-//si no paso url, se obtiene la primera página de películas populares por defecto
+// sin page, devuelve la primera pagina de peliculas populares
 export async function getPopularMovies(page = 1): Promise<TmdbMovie[]> {
   return fetchFromTmdb('/movie/popular', { page: String(page) });
 }
 
 
 
-// le dice a fetch que busque películas que coincidan con el query proporcionado
+// le dice a fetch que busque peliculas que coincidan con el query proporcionado
 export async function searchMovies(query: string, page = 1): Promise<TmdbMovie[]> {
   return fetchFromTmdb('/search/movie', { query, page: String(page) });
 }

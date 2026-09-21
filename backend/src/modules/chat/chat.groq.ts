@@ -68,6 +68,7 @@ async function runToolCallingLoop(
 ): Promise<string> {
   let toolCallsUsed = 0;
 
+  // sale cuando el modelo responde sin tool_call o al llegar a MAX_TOOL_CALLS
   while (true) {
     // solo la primera vuelta fuerza la tool; con el resultado ya en el contexto el modelo decide
     const toolChoice = forceTool && toolCallsUsed === 0 ? 'required' : 'auto';

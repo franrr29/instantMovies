@@ -12,6 +12,7 @@ export interface AuthenticatedUser {
   username: string;
 }
 
+// agrega req.user al tipo Request de express
 declare global {
   namespace Express {
     interface Request {
@@ -39,6 +40,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
   }
 
   try {
+    // sub es el id de usuario y username un claim extra, ambos definidos al firmar en auth.service
     const payload = jwt.verify(token, env.JWT_SECRET) as jwt.JwtPayload;
     req.user = { id: Number(payload.sub), username: payload.username };
     next();

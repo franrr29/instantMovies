@@ -1,6 +1,6 @@
-// Clases compartidas del lenguaje visual "cine nocturno / blueprint":
+// clases compartidas del lenguaje visual "cine nocturno / blueprint":
 // fondo casi negro, texto marfil, acento ambar, bordes finos sin redondear.
-// Paleta y tipografia en tailwind.config.ts.
+// paleta y tipografia en tailwind.config.ts.
 import { cn } from '../../lib/cn';
 
 

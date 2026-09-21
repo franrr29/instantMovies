@@ -35,7 +35,6 @@ function normalizeForDetection(input: string): string {
 
 
 
-// sanitiza el mensaje de chat eliminando etiquetas HTML y detectando posibles intentos de prompt injection
 export function sanitizeMessage(input: string): SanitizeResult {
   const clean = input.replace(HTML_TAG_REGEX, '');
   const forDetection = normalizeForDetection(clean);

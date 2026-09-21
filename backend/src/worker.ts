@@ -54,6 +54,7 @@ async function processRecommendationJob(job: Job<RecommendationJobData>): Promis
 
     logger.info({ recommendationId, movies }, 'recomendacion completada');
   } catch (err) {
+    // si quedan intentos relanza para que bullmq reintente; en el ultimo intento marca failed
     const maxAttempts = job.opts.attempts ?? 1;
 
     if (job.attemptsMade < maxAttempts - 1) {

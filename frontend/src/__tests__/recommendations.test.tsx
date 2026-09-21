@@ -60,7 +60,6 @@ describe('Recommendations', () => {
     vi.clearAllMocks();
   });
 
-  // usuario sin likes: no tiene sentido dejarlo pedir una recomendacion
   it('sin likes: muestra el mensaje y deshabilita el boton de pedir', async () => {
     vi.mocked(getLikes).mockResolvedValue([]);
     vi.mocked(getRecommendations).mockResolvedValue([]);
@@ -71,7 +70,6 @@ describe('Recommendations', () => {
     expect(screen.getByRole('button', { name: /Pedir recomendaciones/ })).toBeDisabled();
   });
 
-  // hay un pedido en curso: se ve el indicador de espera y no se puede pedir otro
   it('estado PENDING: muestra el indicador de loading y deshabilita el boton', async () => {
     vi.mocked(getLikes).mockResolvedValue([fakeLike(1)]);
     vi.mocked(getRecommendations).mockResolvedValue([
@@ -84,7 +82,6 @@ describe('Recommendations', () => {
     expect(screen.getByRole('button', { name: /Pedir recomendaciones/ })).toBeDisabled();
   });
 
-  // recomendacion resuelta: las 3 peliculas se muestran con su titulo y el reason del LLM
   it('estado COMPLETED: renderiza 3 MovieCards con titulo y reason', async () => {
     vi.mocked(getLikes).mockResolvedValue([fakeLike(1)]);
 
@@ -106,7 +103,6 @@ describe('Recommendations', () => {
     }
   });
 
-  // el worker marco la rec como fallida: se avisa al usuario, no se rompe la pantalla
   it('estado FAILED: muestra el mensaje de error', async () => {
     vi.mocked(getLikes).mockResolvedValue([fakeLike(1)]);
     vi.mocked(getRecommendations).mockResolvedValue([

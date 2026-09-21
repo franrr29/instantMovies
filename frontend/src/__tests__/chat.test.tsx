@@ -68,8 +68,8 @@ describe('Chat', () => {
     expect(sendMessage).toHaveBeenCalledWith('hola');
   });
 
-  // cuando el LLM encuentra peliculas via tool calling, se muestran como MovieCards
-  it('movies en la respuesta: renderiza 3 MovieCards debajo de la respuesta', async () => {
+  // cuando el LLM encuentra peliculas via tool calling, se muestran como ChatMoviePreview
+  it('movies en la respuesta: renderiza 3 ChatMoviePreview debajo de la respuesta', async () => {
     const movies = [fakeMovie(1, 'Pelicula A'), fakeMovie(2, 'Pelicula B'), fakeMovie(3, 'Pelicula C')];
     vi.mocked(sendMessage).mockResolvedValue({ reply: 'Te recomiendo estas', movies });
 
@@ -84,7 +84,7 @@ describe('Chat', () => {
   });
 
   // promesa controlada a mano para inspeccionar el estado intermedio antes de que resuelva
-  it('loading: muestra Pensando... y deshabilita input y boton mientras espera la respuesta', async () => {
+  it('loading: muestra Escribiendo… y deshabilita input y boton mientras espera la respuesta', async () => {
     const deferred = createDeferred<{ reply: string; movies: ChatMovieResult[] }>();
     vi.mocked(sendMessage).mockReturnValue(deferred.promise);
 

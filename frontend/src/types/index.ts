@@ -3,7 +3,7 @@ export interface User {
   username: string;
 }
 
-// forma cruda que devuelve TMDB (backend/shared/tmdb.ts), /movies y /movies/trending
+// backend/src/shared/tmdb.ts: forma cruda que devuelve TMDB, /movies y /movies/trending
 // la pasan sin transformar
 export interface Movie {
   id: number;

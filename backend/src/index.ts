@@ -46,7 +46,6 @@ async function shutdown(signal: string) {
 
 
 
-//escucha el proceso y comienza a ejecutar el shutdown:
 process.on('SIGTERM', () => {
   shutdown('SIGTERM');
 });

@@ -96,7 +96,7 @@ export async function requestRecommendation(userId: number): Promise<Recommendat
     );
   }
 
-  // CLAUDE.md, regla 7 del flujo asincrono: idempotencia, no encolar si ya hay una pending
+  // idempotencia: no encolar si el usuario ya tiene una recomendacion pending
   const existingRecommendations = await getRecommendationsByUser(userId);
   const hasPendingRecommendation = existingRecommendations.some(
     (recommendation) => recommendation.status === RecommendationStatus.PENDING,

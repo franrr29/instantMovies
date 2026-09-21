@@ -57,6 +57,7 @@ async function requestGuardCompletion(message: string) {
 function parseGuardContent(rawContent: string): MessageSafety {
   const cleanContent = rawContent.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
 
+  // intenta parsear la respuesta completa; si el modelo agrego texto extra, extrae el json con regex
   try {
     return guardResponseSchema.parse(JSON.parse(cleanContent));
   } catch {
@@ -83,9 +84,9 @@ async function attemptGuardCheck(message: string): Promise<MessageSafety> {
 
 
 
-// LLM como guard antes de procesar el chat. Un allowed:false explicito (JSON valido) se respeta siempre.
-// Si tras reintentar una vez sigue fallando por parseo o red, fail-open (allowed:true): el system prompt
-// del chat ya acota el dominio, y fail-closed intermitente por fallas de qwen3.8-27b bloqueaba mensajes validos.
+// LLM como guard antes de procesar el chat; un allowed:false explicito (JSON valido) se respeta siempre.
+// si tras reintentar una vez sigue fallando por parseo o red, fail-open (allowed:true): el system prompt
+// del chat ya acota el dominio, y fail-closed intermitente por fallas del modelo bloqueaba mensajes validos.
 export async function checkMessageSafety(message: string): Promise<MessageSafety> {
   try {
     return await attemptGuardCheck(message);

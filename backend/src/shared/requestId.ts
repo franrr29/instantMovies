@@ -5,6 +5,7 @@ import { runWithRequestId } from './requestContext';
 
 
 
+// agrega req.id al tipo Request de express
 declare global {
   namespace Express {
     interface Request {

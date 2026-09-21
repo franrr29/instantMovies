@@ -57,7 +57,6 @@ describe('AuthContext', () => {
   });
 
   describe('restaurar sesion', () => {
-    // sesion valida al montar: el contexto debe quedar con el user que devuelve /auth/me
     it('GET /auth/me -> 200 con user: el contexto tiene user despues del mount', async () => {
       vi.mocked(api.get).mockResolvedValue({ data: { user: { id: 1, username: 'demo@instant.com' } } });
 
@@ -66,7 +65,6 @@ describe('AuthContext', () => {
       expect(await screen.findByTestId('user-state')).toHaveTextContent('demo@instant.com');
     });
 
-    // sin sesion (401): no debe romper, el contexto arranca sin user
     it('GET /auth/me -> 401: el contexto queda sin user', async () => {
       vi.mocked(api.get).mockRejectedValue({ response: { status: 401 } });
 
@@ -77,7 +75,6 @@ describe('AuthContext', () => {
   });
 
   describe('login', () => {
-    // click en login dispara el POST y el contexto se actualiza con el user devuelto
     it('POST /auth/login -> 200: el contexto actualiza el user', async () => {
       vi.mocked(api.get).mockRejectedValue({ response: { status: 401 } });
       vi.mocked(api.post).mockResolvedValue({ data: { user: { id: 1, username: 'demo@instant.com' } } });
@@ -96,7 +93,6 @@ describe('AuthContext', () => {
   });
 
   describe('logout', () => {
-    // arranca logueado (mock de /auth/me con user), click en logout limpia el estado
     it('POST /auth/logout -> 200: el contexto limpia el user', async () => {
       vi.mocked(api.get).mockResolvedValue({ data: { user: { id: 1, username: 'demo@instant.com' } } });
       vi.mocked(api.post).mockResolvedValue({ data: { message: 'Logged out' } });

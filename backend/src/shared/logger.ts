@@ -4,7 +4,7 @@ import { getRequestId } from './requestContext';
 
 
 
-//observabilidad: logger centralizado para la aplicación y tener logs consistentes en toda la app
+// observabilidad: logger centralizado para la aplicacion y tener logs consistentes en toda la app
 export const logger = pino({
   serializers: {
     err: pino.stdSerializers.err,

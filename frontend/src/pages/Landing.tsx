@@ -147,7 +147,6 @@ function PosterPlaceholder({ title, meta, gradient, posterPath }: PosterPlacehol
 export function Landing() {
   return (
     <div className="relative overflow-x-hidden bg-bg text-ink">
-      {/* NAV */}
       <div className="mx-auto flex max-w-6xl items-center gap-8 px-6 py-5 sm:px-10">
         <Logo />
         <div className="ml-auto hidden items-center gap-7 text-[13px] sm:flex">
@@ -168,7 +167,6 @@ export function Landing() {
         </Link>
       </div>
 
-      {/* HERO */}
       <section className="relative mx-auto max-w-6xl px-6 pb-20 pt-10 sm:px-10 sm:pb-24 sm:pt-14">
         <div
           className="pointer-events-none absolute -inset-x-[10%] -top-[10%] h-[70vh] animate-flicker
@@ -237,7 +235,6 @@ export function Landing() {
         </div>
       </section>
 
-      {/* MARQUEE */}
       <div className="overflow-hidden border-y border-divider py-3.5">
         <div
           className="flex w-max animate-marquee gap-8 whitespace-nowrap font-display text-xs
@@ -251,7 +248,6 @@ export function Landing() {
         </div>
       </div>
 
-      {/* HOW IT WORKS */}
       <section id="how" className="mx-auto max-w-6xl px-6 py-24 sm:px-10 sm:py-32">
         <div className="mb-14 grid gap-8 sm:mb-20 lg:grid-cols-[.6fr_1.4fr] lg:items-end">
           <Eyebrow>REEL 02 · Three cuts</Eyebrow>
@@ -290,7 +286,6 @@ export function Landing() {
         </div>
       </section>
 
-      {/* ASSISTANT PREVIEW */}
       <section id="chat" className="mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-24">
         <div className="grid items-center gap-16 lg:grid-cols-2">
           <div>
@@ -352,7 +347,6 @@ export function Landing() {
         </div>
       </section>
 
-      {/* STATS */}
       <section className="border-y border-divider">
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-10 px-6 py-12 sm:px-10 lg:grid-cols-4">
           {STATS.map((stat) => (
@@ -366,7 +360,6 @@ export function Landing() {
         </div>
       </section>
 
-      {/* FAQ */}
       <section id="faq" className="mx-auto max-w-6xl px-6 py-24 sm:px-10 sm:py-32">
         <div className="grid gap-10 lg:grid-cols-[.6fr_1.4fr]">
           <div>
@@ -387,7 +380,6 @@ export function Landing() {
         </div>
       </section>
 
-      {/* FINAL CTA */}
       <section className="mx-auto max-w-6xl px-6 py-24 sm:px-10 sm:py-32">
         <div
           className="relative border border-divider px-8 py-20 text-center sm:px-16
@@ -415,7 +407,6 @@ export function Landing() {
         </div>
       </section>
 
-      {/* FOOTER */}
       <footer className="border-t border-divider">
         <div
           className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-5 px-6 py-10

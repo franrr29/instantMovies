@@ -9,7 +9,7 @@
 }
 
 @layer utilities {
-  /* Scrollbar fina en tono ambar (accent) para el panel de mensajes del chat flotante */
+  /* scrollbar fina en tono ambar (accent) para el panel de mensajes del chat flotante */
   .chat-scroll {
     scrollbar-width: thin;
     scrollbar-color: rgba(224, 164, 88, 0.55) transparent;

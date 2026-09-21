@@ -58,7 +58,6 @@ describe('MovieList', () => {
     vi.clearAllMocks();
   });
 
-  // sin busqueda activa, la pantalla arranca mostrando las trending
   it('trending como estado inicial: renderiza MovieCards con los titulos', async () => {
     const trending = [fakeMovie(1, 'Resident Evil'), fakeMovie(2, 'Moana')];
     vi.mocked(getTrendingMovies).mockResolvedValue(trending);
@@ -72,7 +71,6 @@ describe('MovieList', () => {
     expect(getTrendingMovies).toHaveBeenCalled();
   });
 
-  // escribir no debe disparar la request en cada tecla, solo cuando se frena el debounce
   it('busqueda con debounce: no llama a la API hasta que pasa el delay', async () => {
     const trendingMovie = fakeMovie(1, 'Resident Evil');
     const searchResult = fakeMovie(603, 'The Matrix');
@@ -113,7 +111,6 @@ describe('MovieList', () => {
     expect(await screen.findByText(searchResult.title)).toBeInTheDocument();
   });
 
-  // click en "Like" pega al backend y, tras el refetch de /likes, el boton cambia a "Liked"
   it('toggle like: click en el boton llama a POST /likes y despues muestra estado likeado', async () => {
     const movie = fakeMovie(1, 'Resident Evil');
     vi.mocked(getTrendingMovies).mockResolvedValue([movie]);

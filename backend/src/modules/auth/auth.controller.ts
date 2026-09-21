@@ -7,7 +7,6 @@ import { AuthServiceError, loginUser, registerUser } from './auth.service';
 
 
 
-//registrar usuario:
 export async function register(req: Request, res: Response, next: NextFunction) {
   try {
     const { username, password } = registerSchema.parse(req.body);
@@ -33,7 +32,6 @@ export async function register(req: Request, res: Response, next: NextFunction) 
 
 
 
-//logear usuario:
 export async function login(req: Request, res: Response, next: NextFunction) {
   try {
     const { username, password } = loginSchema.parse(req.body);
@@ -60,7 +58,7 @@ export async function login(req: Request, res: Response, next: NextFunction) {
 
 
 
-//cerrar sesion, limpia la cookie de auth:
+// limpia la cookie de auth
 export async function logout(req: Request, res: Response) {
   clearAuthCookie(res);
   res.status(200).json({ message: 'Logged out' });
@@ -68,7 +66,7 @@ export async function logout(req: Request, res: Response) {
 
 
 
-//sesion actual, para que el frontend la restaure al recargar:
+// devuelve el usuario de la sesion para que el frontend la restaure al recargar
 export async function me(req: Request, res: Response) {
   res.status(200).json({ user: { id: req.user!.id, username: req.user!.username } });
 }
