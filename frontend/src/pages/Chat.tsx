@@ -11,8 +11,8 @@ import { getTmdbImageUrl } from '../utils/tmdb';
 
 function ChatMoviePreview({ movie }: { movie: ChatMovieResult }) {
   return (
-    <div className="flex items-center gap-2.5 border border-divider p-2">
-      <div className="h-16 w-11 flex-shrink-0 bg-surface">
+    <div className="flex items-center gap-2.5 rounded-lg border border-divider p-2">
+      <div className="h-16 w-11 flex-shrink-0 overflow-hidden rounded-md bg-surface">
         {movie.posterPath && (
           <img
             src={getTmdbImageUrl(movie.posterPath, 'w92')}
@@ -126,7 +126,10 @@ export function Chat() {
       >
         <div className="flex items-center gap-2.5 border-b border-divider px-4 py-3.5">
           <span className="h-2 w-2 rounded-full bg-accent" />
-          <span className="font-display text-xs uppercase tracking-[0.16em] text-ink">Projectionist</span>
+          <div className="flex flex-col leading-tight">
+            <span className="font-display text-xs uppercase tracking-[0.16em] text-ink">Instant AI</span>
+            <span className="text-[10px] normal-case tracking-normal text-ink/50">Asistente de inteligencia artificial</span>
+          </div>
           <button
             onClick={() => setIsOpen(false)}
             aria-label="Cerrar chat"

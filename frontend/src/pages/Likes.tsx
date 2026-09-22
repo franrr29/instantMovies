@@ -78,8 +78,8 @@ export function Likes() {
 
           if (!like.title) {
             return (
-              <div key={like.tmdbMovieId} className="flex flex-col gap-3 border border-divider p-4">
-                <div className="aspect-[2/3] bg-surface">
+              <div key={like.tmdbMovieId} className="flex flex-col gap-3 rounded-lg border border-divider p-4">
+                <div className="aspect-[2/3] overflow-hidden rounded-md bg-surface">
                   <PosterFallback>Sin poster</PosterFallback>
                 </div>
                 {removeButton}

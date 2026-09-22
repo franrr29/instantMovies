@@ -135,14 +135,14 @@ export function Recommendations() {
                     >
                       <div className="border-t border-divider pt-3">
                         <p className="mb-1.5 font-display text-[10px] uppercase tracking-[0.2em] text-accent">
-                          Why this pick
+                          A.I. Reason
                         </p>
                         <p className="text-xs leading-relaxed text-ink/75">{movie.reason}</p>
                       </div>
                     </MovieCard>
                   ) : (
-                    <div key={movie.tmdbMovieId} className="flex flex-col gap-3 border border-divider p-4">
-                      <div className="aspect-[2/3] bg-surface">
+                    <div key={movie.tmdbMovieId} className="flex flex-col gap-3 rounded-lg border border-divider p-4">
+                      <div className="aspect-[2/3] overflow-hidden rounded-md bg-surface">
                         <PosterFallback>Sin datos de esta película</PosterFallback>
                       </div>
                       <p className="text-xs leading-relaxed text-ink/75">{movie.reason}</p>

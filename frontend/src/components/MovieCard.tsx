@@ -28,7 +28,7 @@ function truncateOverview(overview: string): string {
 
 export function MovieCard({ title, overview, posterPath, voteAverage, children }: MovieCardProps) {
   return (
-    <div className="flex flex-col border border-divider">
+    <div className="flex flex-col overflow-hidden rounded-lg border border-divider">
       <div className="relative aspect-[2/3] bg-surface">
         {posterPath ? (
           <img

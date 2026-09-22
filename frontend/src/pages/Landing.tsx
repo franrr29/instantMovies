@@ -126,7 +126,7 @@ interface PosterPlaceholderProps {
 
 function PosterPlaceholder({ title, meta, gradient, posterPath }: PosterPlaceholderProps) {
   return (
-    <div className="relative aspect-[2/3] border border-divider bg-gradient-to-br from-surface to-bg">
+    <div className="relative aspect-[2/3] overflow-hidden rounded-lg border border-divider bg-gradient-to-br from-surface to-bg">
       <img
         src={getTmdbImageUrl(posterPath, 'w500')}
         alt={title}
@@ -225,7 +225,7 @@ export function Landing() {
             ))}
             <div
               className="flex aspect-[2/3] flex-col items-center justify-center gap-1.5
-                border border-divider text-center font-display"
+                rounded-lg border border-divider text-center font-display"
             >
               <div className="text-2xl text-accent">+</div>
               <div className="text-[10px] tracking-[0.24em] text-ink/60">ADD LIKES</div>
