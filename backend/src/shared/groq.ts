@@ -28,13 +28,15 @@ export const groqRecommendationSchema = z
 
 export const groq = new Groq({
   apiKey: env.GROQ_API_KEY,
-  // groq.helicone.ai es un proxy de observabilidad para las llamadas a groq
-  baseURL: 'https://groq.helicone.ai',
-  defaultHeaders: {
-    'Helicone-Auth': `Bearer ${env.HELICONE_API_KEY}`,
-  },
+  ...(env.HELICONE_API_KEY
+    ? {
+        baseURL: 'https://groq.helicone.ai',
+        defaultHeaders: {
+          'Helicone-Auth': `Bearer ${env.HELICONE_API_KEY}`,
+        },
+      }
+    : {}),
 });
-
 
 
 function buildPrompt(likedMovies: { id: number; title: string; genres: string[] }[]): string {
