@@ -10,7 +10,7 @@ export const chatRouter = Router();
 
 chatRouter.use(authenticate);
 
-// 10 requests/min por usuario; keyGenerator usa req.user, por eso va despues de authenticate
+// 10 requests/min por usuario; keyGenerator usa req.user
 const chatRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 10,

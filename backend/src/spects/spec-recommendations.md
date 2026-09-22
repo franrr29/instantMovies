@@ -47,16 +47,27 @@ Para cada película en el array movies, llama a getMovieById(tmdbMovieId)
 Try/catch individual — si TMDB falla para una, devuelve datos mínimos
 Status no cambia — sigue COMPLETED, el fallo es de TMDB al leer, no del job
 Worker (proceso separado)
-Lee likes del usuario de la DB
+Rate limit nativo de BullMQ: limiter { max: 28, duration: 60000 } (conservador para el free tier de Groq)
+Lee likes del usuario de la DB. Sin likes → failRecommendation directo (no se llama a Groq)
 Enriquece cada like con TMDB para armar { id, title, genres }
-Llama a generateRecommendation(likedMovies) → Groq devuelve { movies: [3 películas] }
-Zod valida con wrapper { movies: z.array().length(3) } + .transform() (Groq exige raíz objeto en json_object)
-Si éxito → completeRecommendation(id, movies)
+Llama a generateRecommendation(likedMovies) (shared/groq.ts), que hace todo el pipeline de abajo y devuelve [{ title, tmdbMovieId, reason }]
+El worker mapea a { tmdbMovieId, reason } (lo que se persiste en movies) y llama a completeRecommendation(id, movies)
 Si fallo y quedan reintentos → relanza error para que BullMQ reintente
-Si fallo y se agotaron reintentos → failRecommendation(id)
+Si fallo y se agotaron reintentos → failRecommendation(id). No se persiste basura
+
+generateRecommendation (shared/groq.ts)
+1. Groq NO devuelve tmdbMovieId: solo título y razón. Los LLMs no conocen los IDs de TMDB y los inventan
+2. Zod valida la salida con groqRecommendationSchema: { movies: z.array(groqMovieSchema).length(3) } + .transform() al array (Groq exige raíz objeto en json_object). groqMovieSchema tiene solo { title, reason } (sin tmdbMovieId)
+3. Después de parsear, busca cada título en TMDB con searchMovies, en paralelo con Promise.allSettled: que falle la búsqueda de uno no tira a las otras
+4. El primer resultado de TMDB es el tmdbMovieId real. Un título sin resultados, o cuya búsqueda falló, se descarta con un warn (la rec puede quedar con menos de 3 películas)
+5. Si no se resolvió ninguna, lanza Error: el worker reintenta o marca FAILED (nunca se guarda una lista vacía)
+El prompt le pide JSON { movies: [{ title, reason }] } y no menciona tmdbMovieId. Modelo qwen/qwen3.8-27b, response_format json_object, vía el proxy de Helicone (ver spec-infra.md).
+
 Decisiones de diseño
-movies Json? en vez de tabla hija — las 3 películas siempre se crean, leen y muestran como grupo
+movies Json? en vez de tabla hija — las películas siempre se crean, leen y muestran como grupo
 Async (worker) en vez de sync — Groq puede tardar segundos, no bloquear la API
-3 intentos con backoff exponencial — resiliencia ante fallos transitorios de Groq
+3 intentos con backoff exponencial — resiliencia ante fallos transitorios de Groq o TMDB
+Resolver el ID en TMDB en vez de pedírselo a Groq — un ID inventado apunta a otra película o a ninguna; el título sí lo conoce bien el modelo y TMDB es la fuente de verdad
+Sin function calling en el worker — el contexto se prepara antes de llamar (regla de CLAUDE.md). La búsqueda en TMDB la hace el código, no el modelo
 No se guarda poster/title en DB — se enriquece al leer desde TMDB
 max_tokens: 600 — 3 películas no entran en 200
