@@ -8,6 +8,16 @@ import { recommendationQueue, redisConnection } from './queue/recommendationQueu
 
 const server = app.listen(env.PORT, () => {
   logger.info(`server arrancado en el puerto ${env.PORT}`);
+  logger.info(
+    {
+      helicone: !!env.HELICONE_API_KEY,
+      model: 'qwen/qwen3.8-27b',
+      rateLimit: '28 jobs/min',
+      frontendUrl: env.FRONTEND_URL,
+      nodeEnv: env.NODE_ENV,
+    },
+    'configuracion del sistema',
+  );
 });
 
 
