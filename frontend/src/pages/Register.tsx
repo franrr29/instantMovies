@@ -67,7 +67,17 @@ export function Register() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-bg px-6 py-16">
+    <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-bg px-6 py-16">
+      {/* fondo decorativo */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[url('/movie.jpg')] bg-cover bg-bottom opacity-25"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-t from-bg/70 via-bg/85 to-bg"
+      />
+
       <AuthCard
         tag="Enrol"
         title="Create your account"

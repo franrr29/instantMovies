@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 
 import { panel } from './styles';
 import { cn } from '../../lib/cn';
@@ -19,8 +20,10 @@ export function AuthCard({ tag, title, subtitle, children, footer }: AuthCardPro
   return (
     <div className={cn(panel, 'w-full max-w-md p-8 sm:p-12')}>
       <div className="mb-8 flex items-center gap-2.5 font-display">
-        <span className="flex h-5.5 w-5.5 items-center justify-center bg-accent text-[11px] text-accent-ink">▶</span>
-        <span className="text-base tracking-tight">InstantMovies</span>
+        <Link to="/" className="flex items-center gap-2.5">
+          <span className="flex h-5.5 w-5.5 items-center justify-center bg-accent text-[11px] text-accent-ink">▶</span>
+          <span className="text-base tracking-tight">InstantMovies</span>
+        </Link>
         <span className="ml-auto text-[10px] uppercase tracking-[0.24em] text-ink/50">{tag}</span>
       </div>
 

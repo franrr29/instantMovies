@@ -38,7 +38,7 @@ function ChatBubble({ message }: { message: ChatMessage }) {
     <div className={cn('flex flex-col gap-2', isUser ? 'items-end' : 'items-start')}>
       <p
         className={cn(
-          'max-w-[85%] px-3.5 py-2.5 text-[13px] leading-relaxed',
+          'max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed',
           isUser ? 'border border-accent/40 bg-accent/[0.14] text-ink' : 'border border-divider text-ink',
         )}
       >
