@@ -39,10 +39,20 @@ export const groq = new Groq({
 });
 
 
-function buildPrompt(likedMovies: { id: number; title: string; genres: string[] }[]): string {
+function buildPrompt(
+  likedMovies: { id: number; title: string; genres: string[] }[],
+  previouslyRecommended?: string[],
+): string {
   const likedList = likedMovies
     .map((movie) => `- ${movie.title} — generos: ${movie.genres.join(', ') || 'sin genero'}`)
     .join('\n');
+
+  const previousSection = previouslyRecommended?.length
+    ? [
+        'Tampoco recomiendes estas peliculas que ya le recomendaste antes:',
+        previouslyRecommended.map((title) => `- ${title}`).join('\n'),
+      ]
+    : [];
 
   return [
     'Sos un sistema de recomendacion de peliculas.',
@@ -50,6 +60,7 @@ function buildPrompt(likedMovies: { id: number; title: string; genres: string[] 
     likedList,
     '',
     'No recomiendes ninguna pelicula que ya este en esa lista.',
+    ...previousSection,
     'Recomenda 3 peliculas distintas que el usuario probablemente disfrute, dado ese gusto.',
     'Respondé unicamente con un JSON valido, sin texto adicional ni markdown, con esta forma exacta:',
     '{ "movies": [ { "title": "...", "reason": "..." }, { "title": "...", "reason": "..." }, { "title": "...", "reason": "..." } ] }',
@@ -68,9 +79,10 @@ export interface ResolvedRecommendation {
 
 export async function generateRecommendation(
   likedMovies: { id: number; title: string; genres: string[] }[],
+  previouslyRecommended?: string[],
   model?: string,
 ): Promise<ResolvedRecommendation[]> {
-  const prompt = buildPrompt(likedMovies);
+  const prompt = buildPrompt(likedMovies, previouslyRecommended);
 
   const completion = await groq.chat.completions.create(
     {

@@ -59,6 +59,15 @@ export async function getRecommendationsByUser(userId: number): Promise<Recommen
 
 
 
+export async function getCompletedByUser(userId: number): Promise<Pick<RecommendationRecord, 'movies'>[]> {
+  return prisma.recommendation.findMany({
+    where: { userId, status: RecommendationStatus.COMPLETED },
+    select: { movies: true },
+  }) as Promise<Pick<RecommendationRecord, 'movies'>[]>;
+}
+
+
+
 export async function getRecommendationByIdForUser(
   id: number,
   userId: number,

@@ -50,7 +50,8 @@ Worker (proceso separado)
 Rate limit nativo de BullMQ: limiter { max: 28, duration: 60000 } (conservador para el free tier de Groq)
 Lee likes del usuario de la DB. Sin likes → failRecommendation directo (no se llama a Groq)
 Enriquece cada like con TMDB para armar { id, title, genres }
-Llama a generateRecommendation(likedMovies) (shared/groq.ts), que hace todo el pipeline de abajo y devuelve [{ title, tmdbMovieId, reason }]
+Trae las recs COMPLETED del usuario (getCompletedByUser, solo el campo movies), junta los tmdbMovieId sin repetir y resuelve sus títulos con getMovieById en paralelo (Promise.allSettled): el título que TMDB no resuelve se ignora
+Llama a generateRecommendation(likedMovies, previouslyRecommended) (shared/groq.ts), que hace todo el pipeline de abajo y devuelve [{ title, tmdbMovieId, reason }]
 El worker mapea a { tmdbMovieId, reason } (lo que se persiste en movies) y llama a completeRecommendation(id, movies)
 Si fallo y quedan reintentos → relanza error para que BullMQ reintente
 Si fallo y se agotaron reintentos → failRecommendation(id). No se persiste basura
@@ -61,6 +62,7 @@ generateRecommendation (shared/groq.ts)
 3. Después de parsear, busca cada título en TMDB con searchMovies, en paralelo con Promise.allSettled: que falle la búsqueda de uno no tira a las otras
 4. El primer resultado de TMDB es el tmdbMovieId real. Un título sin resultados, o cuya búsqueda falló, se descarta con un warn (la rec puede quedar con menos de 3 películas)
 5. Si no se resolvió ninguna, lanza Error: el worker reintenta o marca FAILED (nunca se guarda una lista vacía)
+El prompt excluye las películas likeadas y, si previouslyRecommended tiene elementos, también las recomendadas en tandas anteriores ("Tampoco recomiendes estas peliculas que ya le recomendaste antes:" + la lista), para no repetir entre tandas.
 El prompt le pide JSON { movies: [{ title, reason }] } y no menciona tmdbMovieId. Modelo qwen/qwen3.8-27b, response_format json_object, vía el proxy de Helicone (ver spec-infra.md).
 
 Decisiones de diseño

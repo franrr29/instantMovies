@@ -42,6 +42,7 @@ vi.mock('../modules/likes/likes.repository', () => ({
 vi.mock('../modules/recommendations/recommendations.repository', () => ({
   completeRecommendation: vi.fn(),
   failRecommendation: vi.fn(),
+  getCompletedByUser: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock('../shared/groq', () => ({

@@ -5,6 +5,7 @@ import { getLikesByUser } from './modules/likes/likes.repository';
 import {
   completeRecommendation,
   failRecommendation,
+  getCompletedByUser,
 } from './modules/recommendations/recommendations.repository';
 import { RECOMMENDATIONS_QUEUE_NAME, redisConnection } from './queue/recommendationQueue';
 import { GROQ_FALLBACK_MODEL, GROQ_RATE_LIMIT_MAX, GROQ_RATE_LIMIT_WINDOW_MS } from './shared/constants';
@@ -22,6 +23,18 @@ interface RecommendationJobData {
 
 
 
+// titulos de tandas anteriores para que groq no los repita; los que tmdb no resuelve se ignoran
+async function getPreviouslyRecommendedTitles(userId: number): Promise<string[]> {
+  const completed = await getCompletedByUser(userId);
+  const tmdbIds = new Set(completed.flatMap((recommendation) => recommendation.movies ?? []).map((movie) => movie.tmdbMovieId));
+
+  const lookups = await Promise.allSettled([...tmdbIds].map((tmdbId) => getMovieById(tmdbId)));
+
+  return lookups.flatMap((lookup) => (lookup.status === 'fulfilled' ? [lookup.value.title] : []));
+}
+
+
+
 async function processRecommendationJob(job: Job<RecommendationJobData>): Promise<void> {
   const { recommendationId, userId } = job.data;
 
@@ -29,6 +42,7 @@ async function processRecommendationJob(job: Job<RecommendationJobData>): Promis
 
   // fuera del try para poder reusarlo en el fallback
   let likedMovies: { id: number; title: string; genres: string[] }[] | undefined;
+  let previouslyRecommended: string[] = [];
 
   try {
     const likes = await getLikesByUser(userId);
@@ -46,9 +60,11 @@ async function processRecommendationJob(job: Job<RecommendationJobData>): Promis
       }),
     );
 
+    previouslyRecommended = await getPreviouslyRecommendedTitles(userId);
+
     logger.info({ recommendationId }, 'llamando a groq');
 
-    const result = await generateRecommendation(likedMovies);
+    const result = await generateRecommendation(likedMovies, previouslyRecommended);
 
     logger.info({ recommendationId, result }, 'respuesta de groq validada');
 
@@ -73,7 +89,7 @@ async function processRecommendationJob(job: Job<RecommendationJobData>): Promis
     // si fallo antes de armar el contexto (likes o tmdb) no hay con que llamar a groq
     if (likedMovies) {
       try {
-        const fallbackResult = await generateRecommendation(likedMovies, GROQ_FALLBACK_MODEL);
+        const fallbackResult = await generateRecommendation(likedMovies, previouslyRecommended, GROQ_FALLBACK_MODEL);
         const movies = fallbackResult.map((movie) => ({ tmdbMovieId: movie.tmdbMovieId, reason: movie.reason }));
 
         await completeRecommendation(recommendationId, movies);
