@@ -67,16 +67,20 @@ export function Register() {
   }
 
   return (
-    <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-bg px-6 py-16">
+    <div className="relative isolate flex min-h-screen flex-col items-center justify-center overflow-hidden bg-bg px-6 py-16">
       {/* fondo decorativo */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 bg-[url('/movie.jpg')] bg-cover bg-bottom opacity-25"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[url('/movie.jpg')] bg-cover bg-bottom opacity-60"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-t from-bg/70 via-bg/85 to-bg"
+        className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-t from-bg/50 via-bg/65 to-bg"
       />
+
+      <Link to="/" className="mb-4 text-sm text-ink/60 transition-colors hover:text-accent">
+        ← Explorar catálogo
+      </Link>
 
       <AuthCard
         tag="Enrol"
