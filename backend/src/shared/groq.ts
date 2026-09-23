@@ -71,12 +71,15 @@ export async function generateRecommendation(
 ): Promise<ResolvedRecommendation[]> {
   const prompt = buildPrompt(likedMovies);
 
-  const completion = await groq.chat.completions.create({
-    model: RECOMMENDATION_MODEL,
-    messages: [{ role: 'user', content: prompt }],
-    response_format: { type: 'json_object' },
-    max_tokens: RECOMMENDATION_MAX_TOKENS,
-  });
+  const completion = await groq.chat.completions.create(
+    {
+      model: RECOMMENDATION_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      response_format: { type: 'json_object' },
+      max_tokens: RECOMMENDATION_MAX_TOKENS,
+    },
+    env.HELICONE_API_KEY ? { headers: { 'Helicone-Property-Type': 'recommendation' } } : {},
+  );
 
   const rawContent = completion.choices[0]?.message?.content ?? '';
 

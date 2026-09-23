@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { MovieCard } from '../components/MovieCard';
@@ -13,6 +14,14 @@ import type { Recommendation, RecommendationStatus } from '../types';
 
 
 const POLL_INTERVAL_MS = 3000;
+const PENDING_MESSAGE_INTERVAL_MS = 3000;
+
+const PENDING_MESSAGES = [
+  'Analizando tus gustos...',
+  'Buscando películas perfectas para vos...',
+  'Consultando nuestra IA...',
+  'Preparando recomendaciones...',
+];
 
 
 
@@ -54,6 +63,24 @@ export function Recommendations() {
       queryClient.invalidateQueries({ queryKey: ['recommendations'] });
     },
   });
+
+  const [pendingMessageIndex, setPendingMessageIndex] = useState(0);
+  const isPending = hasPendingRecommendation(recommendationsQuery.data);
+
+  // rotar mensajes mientras pending
+  useEffect(() => {
+    if (!isPending) {
+      setPendingMessageIndex(0);
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      setPendingMessageIndex((index) => (index + 1) % PENDING_MESSAGES.length);
+    }, PENDING_MESSAGE_INTERVAL_MS);
+
+    // limpiar interval
+    return () => clearInterval(intervalId);
+  }, [isPending]);
 
   if (likesQuery.isLoading || recommendationsQuery.isLoading) {
     return <div className="py-24 text-center text-sm text-ink/60">Cargando...</div>;
@@ -111,7 +138,7 @@ export function Recommendations() {
               <div className="flex items-center gap-4 border border-divider px-5 py-4">
                 <TypingDots />
                 <p className="font-display text-xs uppercase tracking-[0.2em] text-accent">
-                  Analizando tus gustos...
+                  {PENDING_MESSAGES[pendingMessageIndex]}
                 </p>
               </div>
             )}

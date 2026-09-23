@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { env } from './env';
 import { groq } from './groq';
 import { logger } from './logger';
 
@@ -45,7 +46,10 @@ async function requestGuardCompletion(message: string) {
         ],
         max_tokens: 50,
       },
-      { signal: controller.signal },
+      {
+        signal: controller.signal,
+        ...(env.HELICONE_API_KEY ? { headers: { 'Helicone-Property-Type': 'guard' } } : {}),
+      },
     );
   } finally {
     clearTimeout(timeoutId);

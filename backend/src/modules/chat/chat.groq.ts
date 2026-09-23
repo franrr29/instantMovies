@@ -1,6 +1,7 @@
 import type Groq from 'groq-sdk';
 
 import { ChatMessageRole } from '../../generated/prisma/client';
+import { env } from '../../shared/env';
 import { groq } from '../../shared/groq';
 import type { ChatMessageRecord } from './chat.repository';
 import { type ChatMovieResult, discoverMoviesTool, executeTool, searchMovieTool } from './chat.tools';
@@ -51,7 +52,10 @@ async function callGroqChat(
   try {
     return await groq.chat.completions.create(
       { model: CHAT_MODEL, messages, tools, tool_choice: toolChoice, max_tokens: 400 },
-      { signal: controller.signal },
+      {
+        signal: controller.signal,
+        ...(env.HELICONE_API_KEY ? { headers: { 'Helicone-Property-Type': 'chat' } } : {}),
+      },
     );
   } finally {
     clearTimeout(timeoutId);
