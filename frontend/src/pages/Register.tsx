@@ -79,25 +79,33 @@ export function Register() {
         }
       >
         <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
-          <FormField
-            id="register-username"
-            label="Username"
-            type="email"
-            required
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-            error={fieldErrors.username}
-          />
+          <div>
+            <FormField
+              id="register-username"
+              label="Username"
+              type="email"
+              required
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              error={fieldErrors.username}
+            />
+            <p className="mt-1.5 text-xs text-ink/50">Debe ser un email válido</p>
+          </div>
 
-          <FormField
-            id="register-password"
-            label="Password"
-            type="password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            error={fieldErrors.password}
-          />
+          <div>
+            <FormField
+              id="register-password"
+              label="Password"
+              type="password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              error={fieldErrors.password}
+            />
+            <p className="mt-1.5 text-xs text-ink/50">
+              Mínimo 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial
+            </p>
+          </div>
 
           <FormField
             id="register-confirm-password"
