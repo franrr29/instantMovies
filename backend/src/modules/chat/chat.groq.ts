@@ -1,16 +1,11 @@
 import type Groq from 'groq-sdk';
 
 import { ChatMessageRole } from '../../generated/prisma/client';
+import { CHAT_MAX_TOKENS, CHAT_MAX_TOOL_CALLS, CHAT_TIMEOUT_MS, GROQ_MODEL } from '../../shared/constants';
 import { env } from '../../shared/env';
 import { groq } from '../../shared/groq';
 import type { ChatMessageRecord } from './chat.repository';
 import { type ChatMovieResult, discoverMoviesTool, executeTool, searchMovieTool } from './chat.tools';
-
-
-
-const CHAT_MODEL = 'qwen/qwen3.8-27b';
-const CHAT_TIMEOUT_MS = 30000;
-const MAX_TOOL_CALLS = 3;
 
 
 
@@ -51,7 +46,7 @@ async function callGroqChat(
 
   try {
     return await groq.chat.completions.create(
-      { model: CHAT_MODEL, messages, tools, tool_choice: toolChoice, max_tokens: 400 },
+      { model: GROQ_MODEL, messages, tools, tool_choice: toolChoice, max_tokens: CHAT_MAX_TOKENS },
       {
         signal: controller.signal,
         ...(env.HELICONE_API_KEY ? { headers: { 'Helicone-Property-Type': 'chat' } } : {}),
@@ -72,7 +67,7 @@ async function runToolCallingLoop(
 ): Promise<string> {
   let toolCallsUsed = 0;
 
-  // sale cuando el modelo responde sin tool_call o al llegar a MAX_TOOL_CALLS
+  // sale cuando el modelo responde sin tool_call o al llegar a CHAT_MAX_TOOL_CALLS
   while (true) {
     // solo la primera vuelta fuerza la tool; con el resultado ya en el contexto el modelo decide
     const toolChoice = forceTool && toolCallsUsed === 0 ? 'required' : 'auto';
@@ -80,7 +75,7 @@ async function runToolCallingLoop(
     const responseMessage = completion.choices[0]?.message;
     const toolCall = responseMessage?.tool_calls?.[0];
 
-    if (!toolCall || toolCallsUsed >= MAX_TOOL_CALLS) {
+    if (!toolCall || toolCallsUsed >= CHAT_MAX_TOOL_CALLS) {
       const content = responseMessage?.content;
 
       // groq a veces devuelve el resultado del tool sin texto; le pedimos que lo redacte, ya sin tools

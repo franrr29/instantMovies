@@ -1,13 +1,13 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
+import { JWT_EXPIRES_IN } from '../../shared/constants';
 import { env } from '../../shared/env';
 import { createUser, findUserByUsername } from './auth.repository';
 
 
 
 const SALT_ROUNDS = 10;
-const JWT_EXPIRES_IN = '24h';
 
 // hash generado una sola vez al levantar el proceso, se usa para comparar
 // cuando el usuario no existe y asi el login tarda lo mismo en ambos casos

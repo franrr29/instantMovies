@@ -1,12 +1,11 @@
 import type { CookieOptions, Response } from 'express';
 
+import { AUTH_COOKIE_MAX_AGE_MS } from './constants';
 import { env } from './env';
 
 
 
 export const AUTH_COOKIE_NAME = 'token';
-
-const AUTH_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 // mismas opciones para set y clear (salvo maxAge, que clearCookie no necesita:
 // alcanza con que coincidan las demas para que el browser reconozca la cookie)

@@ -7,14 +7,11 @@ import {
   failRecommendation,
 } from './modules/recommendations/recommendations.repository';
 import { RECOMMENDATIONS_QUEUE_NAME, redisConnection } from './queue/recommendationQueue';
+import { GROQ_FALLBACK_MODEL, GROQ_RATE_LIMIT_MAX, GROQ_RATE_LIMIT_WINDOW_MS } from './shared/constants';
 import { prisma } from './shared/db';
 import { generateRecommendation } from './shared/groq';
 import { logger } from './shared/logger';
 import { getMovieById } from './shared/tmdb';
-
-
-
-const RATE_LIMIT_WINDOW_MS = 60_000;
 
 
 
@@ -30,6 +27,9 @@ async function processRecommendationJob(job: Job<RecommendationJobData>): Promis
 
   logger.info({ recommendationId, userId }, 'job de recomendacion recibido');
 
+  // fuera del try para poder reusarlo en el fallback
+  let likedMovies: { id: number; title: string; genres: string[] }[] | undefined;
+
   try {
     const likes = await getLikesByUser(userId);
 
@@ -39,7 +39,7 @@ async function processRecommendationJob(job: Job<RecommendationJobData>): Promis
       return;
     }
 
-    const likedMovies = await Promise.all(
+    likedMovies = await Promise.all(
       likes.map(async (like) => {
         const movie = await getMovieById(like.tmdbMovieId);
         return { id: movie.id, title: movie.title, genres: movie.genres.map((genre) => genre.name) };
@@ -69,6 +69,25 @@ async function processRecommendationJob(job: Job<RecommendationJobData>): Promis
       throw err;
     }
 
+    // intentar con modelo fallback antes de marcar failed
+    // si fallo antes de armar el contexto (likes o tmdb) no hay con que llamar a groq
+    if (likedMovies) {
+      try {
+        const fallbackResult = await generateRecommendation(likedMovies, GROQ_FALLBACK_MODEL);
+        const movies = fallbackResult.map((movie) => ({ tmdbMovieId: movie.tmdbMovieId, reason: movie.reason }));
+
+        await completeRecommendation(recommendationId, movies);
+
+        logger.info({ recommendationId, fallbackModel: GROQ_FALLBACK_MODEL }, 'recomendacion completada con modelo fallback');
+        return;
+      } catch (fallbackErr) {
+        logger.error(
+          { err: fallbackErr, recommendationId, userId, fallbackModel: GROQ_FALLBACK_MODEL },
+          'fallo tambien el modelo fallback',
+        );
+      }
+    }
+
     logger.error(
       { err, recommendationId, userId, attemptsMade: job.attemptsMade },
       'fallo el procesamiento de la recomendacion, se agotaron los reintentos, se marca como failed',
@@ -85,7 +104,7 @@ export const recommendationWorker = new Worker<RecommendationJobData>(
   {
     connection: redisConnection,
     // conservador para el free tier de groq: 28 jobs por minuto
-    limiter: { max: 28, duration: RATE_LIMIT_WINDOW_MS },
+    limiter: { max: GROQ_RATE_LIMIT_MAX, duration: GROQ_RATE_LIMIT_WINDOW_MS },
   },
 );
 

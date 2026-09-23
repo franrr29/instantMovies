@@ -1,6 +1,7 @@
 import type Groq from 'groq-sdk';
 
 import { ChatMessageRole } from '../../generated/prisma/client';
+import { CHAT_HISTORY_LIMIT } from '../../shared/constants';
 import { checkMessageSafety } from '../../shared/guard';
 import { logger } from '../../shared/logger';
 import { sanitizeMessage } from '../../shared/sanitize';
@@ -12,7 +13,6 @@ import { asksForMovies, collectSeenMovieIds, compactToolResult } from './chat.ut
 
 
 
-const HISTORY_LIMIT = 10;
 const BLOCKED_REPLY = 'Solo puedo ayudarte con peliculas y entretenimiento.';
 
 export type { ChatMovieResult };
@@ -60,7 +60,7 @@ export async function handleChatMessage(
 
     const systemPrompt = await buildSystemPrompt(userId);
     // se pide despues de guardar el mensaje actual, asi que el historial ya lo incluye como ultimo turno
-    const history = await getMessagesByUser(userId, HISTORY_LIMIT);
+    const history = await getMessagesByUser(userId, CHAT_HISTORY_LIMIT);
 
     const messages: Groq.Chat.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },

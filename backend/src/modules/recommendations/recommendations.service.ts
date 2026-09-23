@@ -7,6 +7,7 @@ import {
   getRecommendationsByUser,
   type RecommendationRecord,
 } from './recommendations.repository';
+import { GROQ_MAX_RETRIES, GROQ_RETRY_BACKOFF_MS } from '../../shared/constants';
 import { getMovieById } from '../../shared/tmdb';
 
 
@@ -118,8 +119,8 @@ export async function requestRecommendation(userId: number): Promise<Recommendat
       userId,
     },
     {
-      attempts: 3,
-      backoff: { type: 'exponential', delay: 5000 },
+      attempts: GROQ_MAX_RETRIES,
+      backoff: { type: 'exponential', delay: GROQ_RETRY_BACKOFF_MS },
     },
   );
 

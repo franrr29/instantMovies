@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { GROQ_MODEL } from './constants';
 import { env } from './env';
 import { groq } from './groq';
 import { logger } from './logger';
@@ -34,7 +35,7 @@ async function requestGuardCompletion(message: string) {
   try {
     return await groq.chat.completions.create(
       {
-        model: 'qwen/qwen3.8-27b',
+        model: GROQ_MODEL,
         temperature: 0,
         messages: [
           {

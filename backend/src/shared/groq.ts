@@ -1,13 +1,13 @@
 import Groq from 'groq-sdk';
 import { z } from 'zod';
 
+import { GROQ_MODEL } from './constants';
 import { env } from './env';
 import { logger } from './logger';
 import { searchMovies } from './tmdb';
 
 
 
-const RECOMMENDATION_MODEL = 'qwen/qwen3.8-27b';
 const RECOMMENDATION_MAX_TOKENS = 600;
 
 // groq solo devuelve titulo y razon: los LLMs no conocen los IDs de TMDB y los
@@ -68,12 +68,13 @@ export interface ResolvedRecommendation {
 
 export async function generateRecommendation(
   likedMovies: { id: number; title: string; genres: string[] }[],
+  model?: string,
 ): Promise<ResolvedRecommendation[]> {
   const prompt = buildPrompt(likedMovies);
 
   const completion = await groq.chat.completions.create(
     {
-      model: RECOMMENDATION_MODEL,
+      model: model ?? GROQ_MODEL,
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
       max_tokens: RECOMMENDATION_MAX_TOKENS,

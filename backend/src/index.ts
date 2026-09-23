@@ -1,4 +1,5 @@
 import { app } from './app';
+import { GROQ_MODEL, GROQ_RATE_LIMIT_MAX } from './shared/constants';
 import { prisma } from './shared/db';
 import { env } from './shared/env';
 import { logger } from './shared/logger';
@@ -11,8 +12,8 @@ const server = app.listen(env.PORT, () => {
   logger.info(
     {
       helicone: !!env.HELICONE_API_KEY,
-      model: 'qwen/qwen3.8-27b',
-      rateLimit: '28 jobs/min',
+      model: GROQ_MODEL,
+      rateLimit: `${GROQ_RATE_LIMIT_MAX} jobs/min`,
       frontendUrl: env.FRONTEND_URL,
       nodeEnv: env.NODE_ENV,
     },
