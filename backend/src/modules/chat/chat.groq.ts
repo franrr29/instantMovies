@@ -1,9 +1,17 @@
 import type Groq from 'groq-sdk';
+import { APIConnectionTimeoutError, APIError, APIUserAbortError } from 'groq-sdk';
 
 import { ChatMessageRole } from '../../generated/prisma/client';
-import { CHAT_MAX_TOKENS, CHAT_MAX_TOOL_CALLS, CHAT_TIMEOUT_MS, GROQ_MODEL } from '../../shared/constants';
+import {
+  CHAT_MAX_TOKENS,
+  CHAT_MAX_TOOL_CALLS,
+  CHAT_TIMEOUT_MS,
+  GROQ_FALLBACK_MODEL,
+  GROQ_MODEL,
+} from '../../shared/constants';
 import { env } from '../../shared/env';
 import { groq } from '../../shared/groq';
+import { logger } from '../../shared/logger';
 import type { ChatMessageRecord } from './chat.repository';
 import { type ChatMovieResult, discoverMoviesTool, executeTool, searchMovieTool } from './chat.tools';
 
@@ -36,7 +44,26 @@ export function toGroqMessage(entry: ChatMessageRecord): Groq.Chat.ChatCompletio
 
 
 
-async function callGroqChat(
+// groq devuelve el body completo del error: { error: { code, message, ... } }
+function isToolUseFailed(err: APIError): boolean {
+  const body = err.error as { error?: { code?: string } } | undefined;
+  return body?.error?.code === 'tool_use_failed';
+}
+
+
+
+// solo fallas del modelo (rate limit, caida, timeout, tool call mal generado) justifican cambiar de modelo
+function shouldUseFallbackModel(err: unknown): boolean {
+  if (err instanceof APIUserAbortError || err instanceof APIConnectionTimeoutError) return true;
+  if (!(err instanceof APIError) || err.status === undefined) return false;
+
+  return err.status === 429 || err.status >= 500 || (err.status === 400 && isToolUseFailed(err));
+}
+
+
+
+async function requestGroqChat(
+  model: string,
   messages: Groq.Chat.ChatCompletionMessageParam[],
   tools?: Groq.Chat.ChatCompletionTool[],
   toolChoice?: 'auto' | 'required',
@@ -46,7 +73,7 @@ async function callGroqChat(
 
   try {
     return await groq.chat.completions.create(
-      { model: GROQ_MODEL, messages, tools, tool_choice: toolChoice, max_tokens: CHAT_MAX_TOKENS },
+      { model, messages, tools, tool_choice: toolChoice, max_tokens: CHAT_MAX_TOKENS },
       {
         signal: controller.signal,
         ...(env.HELICONE_API_KEY ? { headers: { 'Helicone-Property-Type': 'chat' } } : {}),
@@ -54,6 +81,25 @@ async function callGroqChat(
     );
   } finally {
     clearTimeout(timeoutId);
+  }
+}
+
+
+
+async function callGroqChat(
+  messages: Groq.Chat.ChatCompletionMessageParam[],
+  tools?: Groq.Chat.ChatCompletionTool[],
+  toolChoice?: 'auto' | 'required',
+  model: string = GROQ_MODEL,
+): Promise<Groq.Chat.ChatCompletion> {
+  try {
+    return await requestGroqChat(model, messages, tools, toolChoice);
+  } catch (err) {
+    if (model === GROQ_FALLBACK_MODEL || !shouldUseFallbackModel(err)) throw err;
+
+    logger.warn({ err, model, fallbackModel: GROQ_FALLBACK_MODEL }, 'fallo groq en el chat, se reintenta con modelo fallback');
+
+    return requestGroqChat(GROQ_FALLBACK_MODEL, messages, tools, toolChoice);
   }
 }
 

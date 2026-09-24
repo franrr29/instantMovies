@@ -165,7 +165,7 @@ Todo requiere JWT válido salvo /auth/register, /auth/login y /health (público,
 
 - Levantar todo:        docker compose up --build
 - Migraciones Prisma:   corren al arranque del contenedor
-- Tests:                cd backend && npm test (Vitest, 7 archivos, 52 tests) · cd frontend && npm test (Vitest + Testing Library, 4 archivos, 14 tests)
+- Tests:                cd backend && npm test (Vitest, 7 archivos, 54 tests) · cd frontend && npm test (Vitest + Testing Library, 4 archivos, 14 tests)
 
 ## Principios
 

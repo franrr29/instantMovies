@@ -1,7 +1,10 @@
-// tests unitarios del modulo chat: chat.service (mensaje bloqueado por sanitizacion o por guard) y chat.utils
+// tests unitarios del modulo chat: chat.service (mensaje bloqueado por sanitizacion o por guard),
+// chat.groq (fallback de modelo) y chat.utils
+import { RateLimitError } from 'groq-sdk';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ChatMessageRole } from '../generated/prisma/client';
+import { GROQ_FALLBACK_MODEL, GROQ_MODEL } from '../shared/constants';
 
 
 
@@ -29,6 +32,7 @@ import { checkMessageSafety } from '../shared/guard';
 import { saveMessage } from '../modules/chat/chat.repository';
 import { sanitizeMessage } from '../shared/sanitize';
 import { handleChatMessage } from '../modules/chat/chat.service';
+import { processChatTurn } from '../modules/chat/chat.groq';
 import { asksForMovies, collectSeenMovieIds, compactToolResult } from '../modules/chat/chat.utils';
 
 
@@ -67,6 +71,35 @@ describe('chat.service handleChatMessage', () => {
 
     expect(result).toEqual({ reply: BLOCKED_REPLY, movies: [] });
     expect(groq.chat.completions.create).not.toHaveBeenCalled();
+  });
+});
+
+describe('chat.groq fallback de modelo', () => {
+  const createMock = vi.mocked(groq.chat.completions.create);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('si el modelo principal falla con 429 responde con el modelo fallback', async () => {
+    const rateLimitError = new RateLimitError(429, { error: { message: 'rate limit' } }, undefined, new Headers());
+    createMock
+      .mockRejectedValueOnce(rateLimitError)
+      .mockResolvedValueOnce({ choices: [{ message: { content: 'hola' } }] } as never);
+
+    const result = await processChatTurn([{ role: 'user', content: 'hola' }], [], false);
+
+    expect(result).toEqual({ reply: 'hola', movies: [] });
+    expect(createMock).toHaveBeenCalledTimes(2);
+    expect(createMock.mock.calls[0][0].model).toBe(GROQ_MODEL);
+    expect(createMock.mock.calls[1][0].model).toBe(GROQ_FALLBACK_MODEL);
+  });
+
+  it('si el error no es de groq no usa el modelo fallback', async () => {
+    createMock.mockRejectedValueOnce(new Error('error interno'));
+
+    await expect(processChatTurn([{ role: 'user', content: 'hola' }], [], false)).rejects.toThrow('error interno');
+    expect(createMock).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { GROQ_MODEL } from './constants';
+import { GROQ_FALLBACK_MODEL, GROQ_MODEL } from './constants';
 import { env } from './env';
 import { groq } from './groq';
 import { logger } from './logger';
@@ -28,14 +28,14 @@ class GuardParseError extends Error {}
 
 
 
-async function requestGuardCompletion(message: string) {
+async function requestGuardCompletion(message: string, model: string) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), GUARD_TIMEOUT_MS);
 
   try {
     return await groq.chat.completions.create(
       {
-        model: GROQ_MODEL,
+        model,
         temperature: 0,
         messages: [
           {
@@ -81,8 +81,8 @@ function parseGuardContent(rawContent: string): MessageSafety {
 
 
 
-async function attemptGuardCheck(message: string): Promise<MessageSafety> {
-  const completion = await requestGuardCompletion(message);
+async function attemptGuardCheck(message: string, model: string): Promise<MessageSafety> {
+  const completion = await requestGuardCompletion(message, model);
   const rawContent = completion.choices[0]?.message?.content ?? '';
   return parseGuardContent(rawContent);
 }
@@ -90,16 +90,19 @@ async function attemptGuardCheck(message: string): Promise<MessageSafety> {
 
 
 // LLM como guard antes de procesar el chat; un allowed:false explicito (JSON valido) se respeta siempre.
-// si tras reintentar una vez sigue fallando por parseo o red, fail-open (allowed:true): el system prompt
+// si tras reintentar una vez con el modelo fallback sigue fallando por parseo o red, fail-open (allowed:true): el system prompt
 // del chat ya acota el dominio, y fail-closed intermitente por fallas del modelo bloqueaba mensajes validos.
 export async function checkMessageSafety(message: string): Promise<MessageSafety> {
   try {
-    return await attemptGuardCheck(message);
+    return await attemptGuardCheck(message, GROQ_MODEL);
   } catch (firstErr) {
-    logger.error({ err: firstErr }, 'fallo el primer intento de validacion de seguridad del mensaje de chat, reintentando');
+    logger.error(
+      { err: firstErr, fallbackModel: GROQ_FALLBACK_MODEL },
+      'fallo el primer intento de validacion de seguridad del mensaje de chat, reintentando con modelo fallback',
+    );
 
     try {
-      return await attemptGuardCheck(message);
+      return await attemptGuardCheck(message, GROQ_FALLBACK_MODEL);
     } catch (secondErr) {
       logger.error({ err: secondErr }, 'fallo el segundo intento de validacion de seguridad del mensaje de chat, se permite por fail-open');
       return { allowed: true };
