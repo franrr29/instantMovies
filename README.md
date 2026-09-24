@@ -79,7 +79,7 @@ cd instantMovies
 2. Copiar y configurar las variables de entorno:
 ```bash
 cp .env.example .env
-# Editar .env con tus API keys y passwords
+# Editar .env con tus API keys, passwords y JWT_SECRET (generar con: openssl rand -hex 32)
 ```
 
 3. Levantar todos los servicios:
