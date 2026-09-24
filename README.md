@@ -10,7 +10,7 @@ Cada módulo del backend sigue la estructura `routes → controller → service 
 - **Backend:** Node.js 20, Express 4, TypeScript, Zod, JWT (cookie httpOnly) + bcrypt, helmet, cors, express-rate-limit, pino
 - **Base de datos:** MySQL 8 con Prisma 6
 - **Cola y worker:** Redis 7 + BullMQ (el worker corre como proceso aparte)
-- **LLM y catálogo:** Groq (`qwen/qwen3.8-27b`) a través del proxy Helicone, y TMDB
+- **LLM y catálogo:** Groq (`qwen/qwen3.8-27b`, con `llama-3.1-8b-instant` como fallback) a través del proxy Helicone, y TMDB
 - **Infra:** Docker Compose (mysql, redis, api, worker, frontend)
 - **Tests:** Vitest (con Testing Library y jsdom en el frontend)
 
@@ -115,7 +115,34 @@ Una recomendación devuelve hasta 3 películas con su justificación (Groq propo
 Los datos de TMDB (poster, título, rating) se agregan en el backend antes de enviar al frontend. Si TMDB falla para una película, un try/catch individual permite devolver las demás con datos mínimos en vez de fallar toda la respuesta.
 
 ### LLM guard con estrategia de resiliencia
-El chat incluye un guard que usa el mismo modelo (`qwen/qwen3.8-27b`) para validar que los mensajes del usuario sean sobre cine/entretenimiento antes de procesarlos. El modelo tiene thinking mode, que a veces incluye razonamiento interno en la respuesta en lugar de JSON puro. La estrategia de resiliencia implementa: strip de tags `<think>`, temperature 0 para respuestas determinísticas, regex fallback para extracción de JSON, retry automático, y fail-open en errores de infraestructura (el system prompt del chat ya limita el dominio como segunda barrera). Un rechazo explícito del guard siempre se respeta.
+El chat incluye un guard que usa el mismo modelo (`qwen/qwen3.8-27b`) para validar que los mensajes del usuario sean sobre cine/entretenimiento antes de procesarlos. El modelo tiene thinking mode, que a veces incluye razonamiento interno en la respuesta en lugar de JSON puro. La estrategia de resiliencia implementa: strip de tags `<think>`, temperature 0 para respuestas determinísticas, regex fallback para extracción de JSON, un reintento con el modelo fallback, y fail-open en errores de infraestructura (el system prompt del chat ya limita el dominio como segunda barrera). Un rechazo explícito del guard siempre se respeta.
+
+### Fallback de modelo (qwen → llama)
+Si `qwen/qwen3.8-27b` falla, se reintenta con `llama-3.1-8b-instant`, que en Groq tiene su propia cuota de rate limit. Aplica en los tres consumidores de Groq, cada uno según su flujo:
+- **Chat:** fallback inmediato dentro del mismo request, solo ante fallas del modelo (429, 5xx, timeout o `tool_use_failed`). Un error interno o de red se propaga sin cambiar de modelo.
+- **Guard:** el segundo intento (el reintento que ya existía) usa el modelo fallback. Si también falla, sigue aplicando fail-open.
+- **Recomendaciones (worker):** BullMQ reintenta con qwen y backoff exponencial; en el último intento se prueba una vez con llama antes de marcar la recomendación como `FAILED`.
+
+### Rate limiting en capas
+| Alcance | Límite | Clave |
+|---|---|---|
+| Global (todo `/api/v1`) | 100 req / 15 min | IP |
+| `POST /auth/login` | 5 intentos / min (contra fuerza bruta) | IP |
+| `POST /chat` | 10 mensajes / min | usuario |
+
+Todos responden `429` con JSON en español (`{ "error": "..." }`), el mismo formato que el resto de los errores de la API. El worker, además, respeta el rate limit de Groq con el limiter nativo de BullMQ (28 jobs/min).
+
+### Límite de 500 caracteres en el chat
+El mensaje del chat se valida con Zod (`max(500)`) antes de llegar al service. Acota los tokens que un usuario puede mandar a Groq en cada turno.
+
+### Observabilidad segmentada en Helicone
+Cada llamada a Groq envía el header `Helicone-Property-Type` (`recommendation`, `chat` o `guard`), lo que permite filtrar en Helicone el consumo, la latencia y los errores de cada flujo por separado.
+
+### Sin repetir recomendaciones entre tandas
+Al generar una nueva recomendación, el worker resuelve en TMDB los títulos de las recomendaciones `COMPLETED` anteriores y los agrega al prompt como exclusión, junto con las películas likeadas.
+
+### Constantes centralizadas
+Modelos (principal y fallback), rate limit y reintentos del worker, timeouts y límites del chat, y expiración del JWT viven en `backend/src/shared/constants.ts`, en vez de estar repartidos como valores sueltos por los módulos.
 
 ### TanStack Query selectivo
 Se usa para server state (movies, likes, recommendations) donde cache e invalidación aportan valor. No se usa para auth (manejado con Context + cookie) ni chat (estado local por naturaleza conversacional).
@@ -140,13 +167,13 @@ Diagramas interactivos generados con Archify, publicados en GitHub Pages:
 
 ### Backend
 - **Framework:** Vitest con mocks de servicios
-- **Archivos (7, 52 tests):**
+- **Archivos (7, 54 tests):**
   - `auth.test.ts` — schemas de auth: email, password y normalización a minúsculas (12)
   - `likes.test.ts` — service de likes: duplicado, no encontrado y enriquecimiento parcial de TMDB (3)
   - `recommendations.test.ts` — service de recomendaciones y validación de la respuesta de Groq (7)
   - `worker.test.ts` — job del worker: éxito, reintentos disponibles y reintentos agotados (4)
   - `groq.test.ts` — resolución de los títulos de Groq a IDs de TMDB (4)
-  - `chat.test.ts` — chat.service (bloqueo por sanitización y por guard) y chat.utils (16)
+  - `chat.test.ts` — chat.service (bloqueo por sanitización y por guard), fallback de modelo en chat.groq y chat.utils (18)
   - `chat.tools.test.ts` — tools del chat: exclusión de películas ya vistas y paginación de `discover_movies` (6)
 - **Ejecutar:** `cd backend && npm test`
 
@@ -155,7 +182,7 @@ Diagramas interactivos generados con Archify, publicados en GitHub Pages:
 - **Archivos (4, 14 tests):** AuthContext (4), Recommendations (4), MovieList (3), Chat (3)
 - **Ejecutar:** `cd frontend && npm test`
 
-> Todos los tests pasan (52/52 backend, 14/14 frontend).
+> Todos los tests pasan (54/54 backend, 14/14 frontend).
 
 ---
 

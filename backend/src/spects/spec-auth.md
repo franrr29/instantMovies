@@ -5,7 +5,7 @@ Capas: routes → controller → service → repository
 
 Endpoints
 POST /register — { username, password } → 201 { user } + cookie httpOnly
-POST /login — { username, password } → 200 { user } + cookie httpOnly
+POST /login — { username, password } → 200 { user } + cookie httpOnly | 429
 POST /logout — (auth) → 200 (limpia cookie)
 GET /me — (auth) → 200 { user } (restaurar sesión)
 Validación (Zod)
@@ -39,6 +39,12 @@ Si no existe, compara contra DUMMY_PASSWORD_HASH para igualar tiempo de respuest
 Si existe, compara password real
 Credenciales inválidas → AuthServiceError('INVALID_CREDENTIALS') → controller devuelve 401 con mensaje genérico (no revela si el username existe o no)
 
+Rate limit del login (auth.routes.ts):
+
+5 intentos/min por IP (express-rate-limit), solo en POST /login
+Al superarlo → 429 { error: 'demasiados intentos de login, intenta de nuevo en un minuto' }
+Se suma al rate limit global (100 req / 15 min por IP, ver spec-infra.md)
+
 Logout:
 
 Limpia cookie httpOnly
@@ -49,5 +55,6 @@ Devuelve { id, username } del usuario autenticado (el middleware authenticate ya
 Decisiones de diseño
 Cookie httpOnly en vez de localStorage para el JWT — el frontend nunca ve el token
 DUMMY_PASSWORD_HASH generado una vez al levantar el proceso — previene timing attacks sin overhead
+Rate limit propio en /login — frena fuerza bruta sobre credenciales; /register no lo tiene (solo el global)
 El service no sabe de HTTP — lanza errores tipados, el controller mapea a status codes
 No se devuelve passwordHash ni createdAt en /me — data minimization

@@ -54,7 +54,8 @@ Trae las recs COMPLETED del usuario (getCompletedByUser, solo el campo movies), 
 Llama a generateRecommendation(likedMovies, previouslyRecommended) (shared/groq.ts), que hace todo el pipeline de abajo y devuelve [{ title, tmdbMovieId, reason }]
 El worker mapea a { tmdbMovieId, reason } (lo que se persiste en movies) y llama a completeRecommendation(id, movies)
 Si fallo y quedan reintentos → relanza error para que BullMQ reintente
-Si fallo y se agotaron reintentos → failRecommendation(id). No se persiste basura
+Si fallo en el último intento y el contexto ya está armado (likedMovies) → prueba UNA vez generateRecommendation con GROQ_FALLBACK_MODEL (llama-3.1-8b-instant). Si responde, completeRecommendation y termina
+Si el fallback también falla, o el error fue antes de armar el contexto (likes o TMDB) → failRecommendation(id). No se persiste basura
 
 generateRecommendation (shared/groq.ts)
 1. Groq NO devuelve tmdbMovieId: solo título y razón. Los LLMs no conocen los IDs de TMDB y los inventan
@@ -63,12 +64,13 @@ generateRecommendation (shared/groq.ts)
 4. El primer resultado de TMDB es el tmdbMovieId real. Un título sin resultados, o cuya búsqueda falló, se descarta con un warn (la rec puede quedar con menos de 3 películas)
 5. Si no se resolvió ninguna, lanza Error: el worker reintenta o marca FAILED (nunca se guarda una lista vacía)
 El prompt excluye las películas likeadas y, si previouslyRecommended tiene elementos, también las recomendadas en tandas anteriores ("Tampoco recomiendes estas peliculas que ya le recomendaste antes:" + la lista), para no repetir entre tandas.
-El prompt le pide JSON { movies: [{ title, reason }] } y no menciona tmdbMovieId. Modelo qwen/qwen3.8-27b, response_format json_object, vía el proxy de Helicone (ver spec-infra.md).
+El prompt le pide JSON { movies: [{ title, reason }] } y no menciona tmdbMovieId. Modelo qwen/qwen3.8-27b por defecto (GROQ_MODEL; generateRecommendation acepta un model opcional para el fallback), response_format json_object, header Helicone-Property-Type: recommendation, vía el proxy de Helicone (ver spec-infra.md).
 
 Decisiones de diseño
 movies Json? en vez de tabla hija — las películas siempre se crean, leen y muestran como grupo
 Async (worker) en vez de sync — Groq puede tardar segundos, no bloquear la API
 3 intentos con backoff exponencial — resiliencia ante fallos transitorios de Groq o TMDB
+Fallback de modelo solo en el último intento — los reintentos con backoff cubren fallos transitorios de qwen; llama es la última oportunidad antes de FAILED
 Resolver el ID en TMDB en vez de pedírselo a Groq — un ID inventado apunta a otra película o a ninguna; el título sí lo conoce bien el modelo y TMDB es la fuente de verdad
 Sin function calling en el worker — el contexto se prepara antes de llamar (regla de CLAUDE.md). La búsqueda en TMDB la hace el código, no el modelo
 No se guarda poster/title en DB — se enriquece al leer desde TMDB

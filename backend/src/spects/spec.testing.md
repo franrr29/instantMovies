@@ -3,13 +3,13 @@ Spec: Testing Backend
 Ubicación: backend/src/__tests__/ (o backend/tests/)
 Framework: Vitest
 Tipo: Unitarios con mocks (sin DB real, sin Groq real, sin Redis real)
-Total: 52 tests backend en 7 archivos. Frontend: 14 tests en 4 archivos (auth-context 4, chat 3, movie-list 3, recommendations 4; ver frontend/src/spects/spec-testing.md)
+Total: 54 tests backend en 7 archivos. Frontend: 14 tests en 4 archivos (auth-context 4, chat 3, movie-list 3, recommendations 4; ver frontend/src/spects/spec-testing.md)
 
 Archivo — tests
 auth.test.ts — 12
 likes.test.ts — 3
 recommendations.test.ts — 7
-chat.test.ts — 16 (service 2 + asksForMovies 9 + compactToolResult 4 + collectSeenMovieIds 1)
+chat.test.ts — 18 (service 2 + fallback de modelo 2 + asksForMovies 9 + compactToolResult 4 + collectSeenMovieIds 1)
 chat.tools.test.ts — 6
 worker.test.ts — 4
 groq.test.ts — 4
@@ -86,7 +86,7 @@ getUserLikes debe devolver todos: los que se enriquecieron completos y el que fa
 
 Método: mockear likes.repository y shared/tmdb.
 
-Chat — chat.test.ts (16 tests)
+Chat — chat.test.ts (18 tests)
 
 Mensaje bloqueado por sanitización:
 
@@ -98,8 +98,13 @@ Mensaje bloqueado por guard:
 checkMessageSafety devuelve { allowed: false }
 handleChatMessage devuelve BLOCKED_REPLY sin llamar a Groq
 
+Fallback de modelo (processChatTurn → callGroqChat, 2 tests):
+
+Primera llamada falla con RateLimitError 429 → la segunda usa GROQ_FALLBACK_MODEL y el turno devuelve su respuesta
+Error que no es de Groq (Error genérico) → se lanza sin fallback, una sola llamada a Groq
+
 Método: mockear shared/guard, shared/sanitize, chat.repository, shared/groq.
-Nota: el guard (shared/guard.ts: retry, fail-open, parseo) no tiene tests propios; acá siempre se mockea. Tampoco el tool loop de chat.groq.ts ni saveToolTrace (persistencia de la traza).
+Nota: el guard (shared/guard.ts: retry con modelo fallback, fail-open, parseo) no tiene tests propios; acá siempre se mockea. Del tool loop de chat.groq.ts solo se cubre el fallback de modelo; saveToolTrace (persistencia de la traza) no tiene tests.
 
 Señales de pedido de películas (asksForMovies, 9 tests) — decide tool_choice: required vs auto:
 
