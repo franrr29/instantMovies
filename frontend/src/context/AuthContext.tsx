@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import type { AxiosRequestConfig } from 'axios';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -25,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // al montar, restaura la sesion contra la cookie httpOnly (si existe y es
   // valida); si el server responde 401 el usuario simplemente queda deslogueado
@@ -61,18 +63,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener(AUTH_LOGOUT_EVENT, handleAuthLogout);
   }, [navigate]);
 
+  // el cache de queries pertenece a la sesion: se limpia en login, register y logout
+  // para que la cuenta siguiente no vea likes ni recomendaciones de la anterior
   async function login(username: string, password: string) {
     const response = await api.post<{ user: User }>('/auth/login', { username, password });
+    queryClient.clear();
     setUser(response.data.user);
   }
 
   async function register(username: string, password: string) {
     const response = await api.post<{ user: User }>('/auth/register', { username, password });
+    queryClient.clear();
     setUser(response.data.user);
   }
 
   async function logout() {
     await api.post('/auth/logout');
+    queryClient.clear();
     setUser(null);
   }
 
