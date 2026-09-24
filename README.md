@@ -10,7 +10,7 @@ Cada módulo del backend sigue la estructura `routes → controller → service 
 - **Backend:** Node.js 20, Express 4, TypeScript, Zod, JWT (cookie httpOnly) + bcrypt, helmet, cors, express-rate-limit, pino
 - **Base de datos:** MySQL 8 con Prisma 6
 - **Cola y worker:** Redis 7 + BullMQ (el worker corre como proceso aparte)
-- **LLM y catálogo:** Groq (`qwen/qwen3.8-27b`, con `llama-3.1-8b-instant` como fallback) a través del proxy Helicone, y TMDB
+- **LLM y catálogo:** Groq (`qwen/qwen3.8-27b`, con `llama-3.1-8b-instant` como fallback), opcionalmente a través del proxy Helicone, y TMDB
 - **Infra:** Docker Compose (mysql, redis, api, worker, frontend)
 - **Tests:** Vitest (con Testing Library y jsdom en el frontend)
 
@@ -65,7 +65,8 @@ Cada módulo del backend sigue la estructura `routes → controller → service 
 
 ### Requisitos previos
 - Docker y Docker Compose instalados
-- API keys de [TMDB](https://developer.themoviedb.org/docs/getting-started), [Groq](https://console.groq.com) y [Helicone](https://www.helicone.ai)
+- API keys de [TMDB](https://developer.themoviedb.org/docs/getting-started) y [Groq](https://console.groq.com)
+- Opcional: API key de [Helicone](https://www.helicone.ai) (`HELICONE_API_KEY`). Si está definida, las llamadas a Groq pasan por el proxy `groq.helicone.ai` y quedan registradas; si no, van directo a `api.groq.com`
 
 ### Pasos
 
@@ -136,7 +137,7 @@ Todos responden `429` con JSON en español (`{ "error": "..." }`), el mismo form
 El mensaje del chat se valida con Zod (`max(500)`) antes de llegar al service. Acota los tokens que un usuario puede mandar a Groq en cada turno.
 
 ### Observabilidad segmentada en Helicone
-Cada llamada a Groq envía el header `Helicone-Property-Type` (`recommendation`, `chat` o `guard`), lo que permite filtrar en Helicone el consumo, la latencia y los errores de cada flujo por separado.
+Con `HELICONE_API_KEY` configurada, cada llamada a Groq envía el header `Helicone-Property-Type` (`recommendation`, `chat` o `guard`), lo que permite filtrar en Helicone el consumo, la latencia y los errores de cada flujo por separado.
 
 ### Sin repetir recomendaciones entre tandas
 Al generar una nueva recomendación, el worker resuelve en TMDB los títulos de las recomendaciones `COMPLETED` anteriores y los agrega al prompt como exclusión, junto con las películas likeadas.
