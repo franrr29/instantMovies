@@ -18,7 +18,7 @@ const chatRateLimiter = rateLimit({
   legacyHeaders: false,
   keyGenerator: (req) => String(req.user!.id),
   handler: (_req, res) => {
-    res.status(429).json({ error: 'Too many requests' });
+    res.status(429).json({ error: 'demasiados mensajes, intenta de nuevo en un minuto' });
   },
 });
 

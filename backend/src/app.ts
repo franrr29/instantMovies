@@ -21,6 +21,9 @@ const rateLimiter = rateLimit({
   limit: 100,
   standardHeaders: true,
   legacyHeaders: false,
+  handler: (_req, res) => {
+    res.status(429).json({ error: 'demasiadas solicitudes, intenta de nuevo mas tarde' });
+  },
 });
 
 export const app = express();
